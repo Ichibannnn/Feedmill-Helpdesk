@@ -5,7 +5,6 @@ import {
   CardContent,
   Checkbox,
   Chip,
-  CircularProgress,
   IconButton,
   OutlinedInput,
   Stack,
@@ -24,6 +23,7 @@ import { CalendarMonthOutlined, Check, FlashOn, LocalOffer, Search, SwapVertOutl
 
 import * as yup from "yup";
 import moment from "moment";
+
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { theme } from "../../../theme/theme";
@@ -33,8 +33,6 @@ import { receiverStyle as sx } from "./styles/receiverStyle";
 
 import useDebounce from "../../../hooks/useDebounce";
 import useDisclosure from "../../../hooks/useDisclosure";
-import noRecordsFound from "../../../assets/svg/noRecordsFound.svg";
-import somethingWentWrong from "../../../assets/svg/SomethingWentWrong.svg";
 
 import { useLazyGetCategoryQuery } from "../../../features/api masterlist/category_api/categoryApi";
 import { useGetReceiverConcernsQuery, useLazyGetFilteredDepartmentQuery, useLazyGetFilteredLocationQuery } from "../../../features/api_request/concerns_receiver/concernReceiverApi";
@@ -138,7 +136,17 @@ const NewReceiverConcern = () => {
     takeTicketOnToggle();
   };
 
-  const tableColumns = [{ type: "checkbox" }, { type: "multiline" }, { type: "multiline" }, { type: "text" }, { type: "text" }, { type: "text" }, { type: "chip" }, { type: "chip" }, { type: "text" }];
+  const tableColumns = [
+    { type: "text", width: 80 },
+    { type: "multiline" },
+    { type: "multiline" },
+    { type: "text" },
+    { type: "text" },
+    { type: "text" },
+    { type: "chip" },
+    { type: "chip" },
+    { type: "text" },
+  ];
 
   return (
     <Stack sx={sx.mainContainer}>
@@ -324,7 +332,7 @@ const NewReceiverConcern = () => {
                                   color: "#D65DB1",
                                 }}
                               >
-                                CONCERN:{" "}
+                                CONCERN:
                               </Typography>
                               <Typography
                                 sx={{
@@ -525,7 +533,6 @@ const NewReceiverConcern = () => {
                         fontWeight: 700,
                         fontSize: "11px",
                       }}
-                      align="center"
                     >
                       TICKET NO.
                       <IconButton
