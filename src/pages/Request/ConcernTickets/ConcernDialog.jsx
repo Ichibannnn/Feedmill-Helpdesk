@@ -49,7 +49,6 @@ import { useLazyGetSubUnitQuery } from "../../../features/api masterlist/sub-uni
 import { useLazyGetLocationWithPaginationQuery } from "../../../features/api masterlist/location/locationApi";
 import { useGetUsersQuery, useLazyGetUsersQuery } from "../../../features/user_management_api/user/userApi";
 import { useLazyGetCategoryQuery } from "../../../features/api masterlist/category_api/categoryApi";
-import { useLazyGetSubCategoryArrayQuery } from "../../../features/api masterlist/sub_category_api/subCategoryApi";
 import { useLazyGetServiceProviderWithParamsQuery } from "../../../features/api masterlist/service_provider/serviceProviderApi";
 import RequestDialogSkeleton from "./RequestConcernSkeleton";
 
@@ -101,7 +100,6 @@ const ConcernDialog = ({ open, onClose }) => {
     ServiceProvider: yup.object().required().label("Service Provider"),
     ChannelId: yup.object().notRequired(),
     CategoryId: yup.array(),
-    SubCategoryId: yup.array(),
     DateNeeded: yup.date().required("Date needed is required"),
     TargetDate: yup.date().notRequired(),
     IssueHandler: yup.string().notRequired(),
@@ -127,7 +125,6 @@ const ConcernDialog = ({ open, onClose }) => {
 
   const [getServiceProvider, { data: serviceProviderData, isLoading: serviceProviderIsLoading, isSuccess: serviceProviderIsSuccess }] = useLazyGetServiceProviderWithParamsQuery();
   const [getCategory, { data: categoryData, isLoading: categoryIsLoading, isSuccess: categoryIsSuccess }] = useLazyGetCategoryQuery();
-  const [getSubCategory, { data: subCategoryData, isLoading: subCategoryIsLoading, isSuccess: subCategoryIsSuccess }] = useLazyGetSubCategoryArrayQuery();
 
   const {
     control,
@@ -160,7 +157,6 @@ const ConcernDialog = ({ open, onClose }) => {
 
       ServiceProvider: null,
       ChannelId: null,
-      SubCategoryId: [],
       CategoryId: [],
       DateNeeded: moment().format("YYYY-MM-DD"),
       TargetDate: null,
@@ -208,15 +204,6 @@ const ConcernDialog = ({ open, onClose }) => {
       payload.append(`AddRequestTicketCategories[0].ticketCategoryId`, "");
       payload.append(`AddRequestTicketCategories[0].categoryId`, "");
     }
-    const subCategory = formData.SubCategoryId;
-    for (let i = 0; i < subCategory.length; i++) {
-      payload.append(`AddRequestTicketSubCategories[${i}].ticketSubCategoryId`, "");
-      payload.append(`AddRequestTicketSubCategories[${i}].subCategoryId`, subCategory[i]?.subCategoryId);
-    }
-    if (subCategory.length === 0) {
-      payload.append(`AddRequestTicketSubCategories[0].ticketSubCategoryId`, "");
-      payload.append(`AddRequestTicketSubCategories[0].subCategoryId`, "");
-    }
 
     const concern = formData.Concern;
     for (let i = 0; i < concern.length; i++) {
@@ -250,10 +237,6 @@ const ConcernDialog = ({ open, onClose }) => {
           dispatch(notificationApi.util.resetApiState());
           dispatch(notificationMessageApi.util.resetApiState());
           setIsLoading(false);
-          // replace([{ value: "" }]);
-          // setTimeout(() => {
-          //   reset({ Concern: [""] });
-          // }, 0);
           setAttachments([]);
           onCloseAction();
         })
@@ -545,37 +528,38 @@ const ConcernDialog = ({ open, onClose }) => {
   }, [open, userInformation, companyIsLoading, businessUnitIsLoading, departmentIsLoading, unitIsLoading, subUnitIsLoading, locationIsLoading]);
 
   useEffect(() => {
-    const selectedCategories = watch("CategoryId");
-    const selectedSubCategories = watch("SubCategoryId");
+    setValue("ServiceProvider", {
+      id: userDetails?.serviceProviders?.[0]?.id,
+      serviceProviderName: userDetails?.serviceProviders?.[0]?.serviceProviderName,
+    });
 
-    if (selectedCategories.length > 0) {
-      const filteredSubCategories = selectedSubCategories.filter((subCategory) =>
-        selectedCategories.some((category) => subCategoryData?.value?.some((item) => item.subCategoryId === subCategory.subCategoryId && item.categoryId === category.id)),
-      );
-      setValue("SubCategoryId", filteredSubCategories);
-    } else {
-      setValue("SubCategoryId", []);
-    }
-  }, [subCategoryData]);
+    setValue("ChannelId", {
+      channelId: userDetails?.channels?.[0]?.channelId,
+      channelName: userDetails?.channels?.[0]?.channelName,
+    });
 
-  useEffect(() => {
-    if (userDetails?.userRoleName === "Helpdesk Associate" || userDetails?.userRoleName === "Helpdesk Associate / Technician") {
-      setValue("ServiceProvider", {
-        id: userDetails?.serviceProviders?.[0]?.id,
-        serviceProviderName: userDetails?.serviceProviders?.[0]?.serviceProviderName,
-      });
-
-      setValue("ChannelId", {
-        channelId: userDetails?.channels?.[0]?.channelId,
-        channelName: userDetails?.channels?.[0]?.channelName,
-      });
-
-      getServiceProvider({ Status: true });
-    } else {
-      setValue("ServiceProvider", null);
-      setValue("ChannelId", null);
-    }
+    getServiceProvider({ Status: true });
   }, [userDetails]);
+
+  // MIS Helpdesk Validation for autofill based on user role (Remove temporary)
+  // useEffect(() => {
+  //   if (userDetails?.userRoleName === "Helpdesk Associate" || userDetails?.userRoleName === "Helpdesk Associate / Technician") {
+  //     setValue("ServiceProvider", {
+  //       id: userDetails?.serviceProviders?.[0]?.id,
+  //       serviceProviderName: userDetails?.serviceProviders?.[0]?.serviceProviderName,
+  //     });
+
+  //     setValue("ChannelId", {
+  //       channelId: userDetails?.channels?.[0]?.channelId,
+  //       channelName: userDetails?.channels?.[0]?.channelName,
+  //     });
+
+  //     getServiceProvider({ Status: true });
+  //   } else {
+  //     setValue("ServiceProvider", null);
+  //     setValue("ChannelId", null);
+  //   }
+  // }, [userDetails]);
 
   if (!watch("UserId")) {
     return <RequestDialogSkeleton open={open} onCloseAction={onCloseAction} />;
@@ -1043,11 +1027,11 @@ const ConcernDialog = ({ open, onClose }) => {
 
                               setValue("ChannelId", null);
                               setValue("CategoryId", []);
-                              setValue("SubCategoryId", []);
                             }}
                             getOptionLabel={(option) => option.serviceProviderName}
                             isOptionEqualToValue={(option, value) => option.id === value.id}
                             fullWidth
+                            disabled
                             componentsProps={sx.automCompleteProp}
                           />
                         );
@@ -1077,12 +1061,12 @@ const ConcernDialog = ({ open, onClose }) => {
                               onChange(value);
 
                               setValue("CategoryId", []);
-                              setValue("SubCategoryId", []);
                             }}
                             getOptionLabel={(option) => option.channelName}
                             isOptionEqualToValue={(option, value) => option.channelId === value.channelId}
                             fullWidth
-                            disabled={!watch("ServiceProvider")}
+                            disabled
+                            // disabled={!watch("ServiceProvider")}
                             componentsProps={sx.automCompleteProp}
                           />
                         );
@@ -1091,89 +1075,46 @@ const ConcernDialog = ({ open, onClose }) => {
                   </Stack>
                 </Stack>
 
-                {/* Category and Sub Category */}
-                <Stack sx={sx.twoColsBox}>
+                {/* Category */}
+                <Stack sx={sx.fieldOneColStack}>
                   {/* Category */}
-                  <Stack sx={sx.fieldTwoColsStack}>
-                    <Stack sx={sx.fieldTitleWithIconBox}>
-                      <Typography sx={sx.fieldText}>Category</Typography>
-                      <FiberManualRecord sx={sx.requiredDot} />
-                    </Stack>
-                    <Controller
-                      control={control}
-                      name="CategoryId"
-                      render={({ field: { ref, value, onChange } }) => {
-                        return (
-                          <Autocomplete
-                            multiple
-                            ref={ref}
-                            size="small"
-                            value={value}
-                            options={categoryData?.value?.category.filter((item) => item.channelId === watch("ChannelId")?.channelId) || []}
-                            loading={categoryIsLoading}
-                            renderInput={(params) => <TextField {...params} placeholder="Select Category" sx={sx.autoComplete} />}
-                            onOpen={() => {
-                              if (!categoryIsSuccess)
-                                getCategory({
-                                  Status: true,
-                                });
-                            }}
-                            onChange={(_, value) => {
-                              onChange(value);
-                              const categoryIdParams = value?.map((category) => category?.id);
-                              getSubCategory({
-                                CategoryId: categoryIdParams,
+                  <Stack sx={sx.fieldTitleWithIconBox}>
+                    <Typography sx={sx.fieldText}>Category</Typography>
+                    <FiberManualRecord sx={sx.requiredDot} />
+                  </Stack>
+                  <Controller
+                    control={control}
+                    name="CategoryId"
+                    render={({ field: { ref, value, onChange } }) => {
+                      return (
+                        <Autocomplete
+                          multiple
+                          ref={ref}
+                          size="small"
+                          value={value}
+                          options={categoryData?.value?.category.filter((item) => item.channelId === watch("ChannelId")?.channelId) || []}
+                          loading={categoryIsLoading}
+                          renderInput={(params) => <TextField {...params} placeholder="Select Category" sx={sx.autoComplete} />}
+                          onOpen={() => {
+                            if (!categoryIsSuccess)
+                              getCategory({
+                                Status: true,
                               });
-
-                              if (watch("CategoryId").length === 0) {
-                                setValue("SubCategoryId", []);
-                              }
-                            }}
-                            getOptionLabel={(option) => option.category_Description || ""}
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            getOptionDisabled={(option) => watch("CategoryId").some((item) => item.id === option.id)}
-                            fullWidth
-                            disabled={!watch("ChannelId")}
-                            disableClearable
-                            componentsProps={sx.automCompleteProp}
-                          />
-                        );
-                      }}
-                    />
-                  </Stack>
-
-                  {/* Sub Category */}
-                  <Stack sx={sx.fieldTwoColsStack}>
-                    <Typography sx={sx.fieldText}>Sub Category</Typography>
-                    <Controller
-                      control={control}
-                      name="SubCategoryId"
-                      render={({ field: { ref, value, onChange } }) => {
-                        return (
-                          <Autocomplete
-                            multiple
-                            ref={ref}
-                            size="small"
-                            value={value || []}
-                            options={subCategoryData?.value || []}
-                            loading={subCategoryIsLoading}
-                            renderInput={(params) => <TextField {...params} placeholder="Select Sub Category" sx={sx.autoComplete} />}
-                            onChange={(_, value) => {
-                              onChange(value || []);
-                            }}
-                            getOptionLabel={(option) => option?.sub_Category_Description || ""}
-                            isOptionEqualToValue={(option, value) => option?.subCategoryId === value?.subCategoryId}
-                            getOptionDisabled={(option) => watch("SubCategoryId").some((item) => item.subCategoryId === option.subCategoryId)}
-                            noOptionsText={"No sub category available"}
-                            fullWidth
-                            disableClearable
-                            disabled={!watch("ChannelId") || watch("CategoryId")?.length === 0}
-                            componentsProps={sx.automCompleteProp}
-                          />
-                        );
-                      }}
-                    />
-                  </Stack>
+                          }}
+                          onChange={(_, value) => {
+                            onChange(value);
+                          }}
+                          getOptionLabel={(option) => option.category_Description || ""}
+                          isOptionEqualToValue={(option, value) => option.id === value.id}
+                          getOptionDisabled={(option) => watch("CategoryId").some((item) => item.id === option.id)}
+                          fullWidth
+                          disabled={!watch("ChannelId")}
+                          disableClearable
+                          componentsProps={sx.automCompleteProp}
+                        />
+                      );
+                    }}
+                  />
                 </Stack>
 
                 {/* Date Needed */}

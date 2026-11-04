@@ -36,7 +36,6 @@ import { useLazyGetUnitQuery } from "../../../features/api masterlist/unit/unitA
 import { useLazyGetSubUnitQuery } from "../../../features/api masterlist/sub-unit/subUnitApi";
 import { useLazyGetLocationWithPaginationQuery } from "../../../features/api masterlist/location/locationApi";
 import { useLazyGetCategoryQuery } from "../../../features/api masterlist/category_api/categoryApi";
-import { useLazyGetSubCategoryArrayQuery } from "../../../features/api masterlist/sub_category_api/subCategoryApi";
 import { useLazyGetServiceProviderQuery } from "../../../features/api masterlist/service_provider/serviceProviderApi";
 import { useLazyGetOneChargingQuery } from "../../../features/api masterlist/one_charging/oneChargingApi";
 
@@ -290,7 +289,6 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
     ServiceProvider: yup.object().required().label("Service Provider"),
     ChannelId: yup.object().notRequired(),
     CategoryId: yup.array(),
-    SubCategoryId: yup.array(),
     DateNeeded: yup.date().required("Date needed is required"),
     TargetDate: yup.date().notRequired(),
     IssueHandler: yup.object().notRequired(),
@@ -313,9 +311,8 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
   const [getLocation, { data: locationData, isLoading: locationIsLoading, isSuccess: locationIsSuccess }] = useLazyGetLocationWithPaginationQuery();
   const [getServiceProvider, { data: serviceProviderData, isLoading: serviceProviderIsLoading, isSuccess: serviceProviderIsSuccess }] = useLazyGetServiceProviderQuery();
   const [getCategory, { data: categoryData, isLoading: categoryIsLoading, isSuccess: categoryIsSuccess }] = useLazyGetCategoryQuery();
-  const [getSubCategory, { data: subCategoryData, isLoading: subCategoryIsLoading, isSuccess: subCategoryIsSuccess }] = useLazyGetSubCategoryArrayQuery();
 
-  const [getRequestorAttachment, { isLoading: attachmentIsLoading, isFetching: attachmentIsFetching }] = useLazyGetRequestorAttachmentQuery();
+  const [getRequestorAttachment] = useLazyGetRequestorAttachmentQuery();
   const [getViewAttachment] = useLazyGetViewAttachmentQuery();
   const [getDownloadAttachment] = useLazyGetDownloadAttachmentQuery();
   const [deleteRequestorAttachment] = useDeleteRequestorAttachmentMutation();
@@ -352,7 +349,6 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
       ServiceProvider: null,
       ChannelId: null,
       CategoryId: [],
-      SubCategoryId: [],
       DateNeeded: null,
       TargetDate: null,
       IssueHandler: null,
@@ -421,17 +417,6 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
         payload.append(`AddRequestTicketCategory[0].categoryId`, "");
       }
 
-      const subCategory = formData.SubCategoryId;
-      for (let i = 0; i < subCategory.length; i++) {
-        payload.append(`AddRequestTicketSubCategory[${i}].ticketSubCategoryId`, subCategory[i].ticketSubCategoryId || "");
-        payload.append(`AddRequestTicketSubCategory[${i}].subCategoryId`, subCategory[i]?.subCategoryId);
-      }
-
-      if (subCategory.length === 0) {
-        payload.append(`AddRequestTicketSubCategory[0].ticketSubCategoryId`, "");
-        payload.append(`AddRequestTicketSubCategory[0].subCategoryId`, "");
-      }
-
       const files = formData.RequestAttachmentsFiles;
       for (let i = 0; i < files.length; i++) {
         payload.append(`RequestAttachmentsFile[${i}].ticketAttachmentId`, files[i].ticketAttachmentId || "");
@@ -491,7 +476,6 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
           DateNeeded: moment().format("YYYY-MM-DD"),
           ChannelId: null,
           CategoryId: [],
-          SubCategoryId: [],
 
           Concern: "",
           Notes: "",
@@ -509,60 +493,6 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
       } finally {
         setIsSaving(false);
       }
-
-      // Old payload
-      // createEditRequestorConcern(payload)
-      //   .unwrap()
-      //   .then(async () => {
-      //     // Ticket saved successfully -> now delete the attachments the user removed
-      //     if (idsToDelete.length > 0) {
-      //       const results = await Promise.allSettled(idsToDelete.map((id) => deleteRequestorAttachment({ ticketAttachmentId: id }).unwrap()));
-
-      //       const failedCount = results.filter((r) => r.status === "rejected").length;
-
-      //       if (failedCount > 0) {
-      //         toast.error("Error!", {
-      //           description: `${failedCount} attachment(s) could not be deleted.`,
-      //           duration: 2500,
-      //         });
-      //       }
-
-      //       refetch();
-      //     }
-
-      //     toast.success("Success!", {
-      //       description: "Concern updated successfully!",
-      //       duration: 1500,
-      //     });
-
-      //     dispatch(notificationApi.util.resetApiState());
-      //     dispatch(notificationMessageApi.util.resetApiState());
-      //     setAttachments([]);
-      //     reset({
-      //       Request_Type: "New Request",
-      //       Severity: "Normal",
-      //       BackJobId: null,
-      //       Contact_Number: "",
-
-      //       DateNeeded: moment().format("YYYY-MM-DD"),
-      //       ChannelId: null,
-      //       CategoryId: [],
-      //       SubCategoryId: [],
-
-      //       Concern: "",
-      //       Notes: "",
-      //     });
-      //     setIsLoading(false);
-      //     setDeletedAttachmentIds([]);
-      //     onClose();
-      //   })
-      //   .catch((err) => {
-      //     console.log("Error", err);
-      //     toast.error("Error!", {
-      //       description: err.data.error.message,
-      //       duration: 1500,
-      //     });
-      //   });
     });
   };
 
@@ -575,7 +505,6 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
       file,
     }));
 
-    // setAttachments((prevFiles) => [...prevFiles, ...uniqueNewFiles]);
     setAttachments((prevFiles) => {
       const safePrev = Array.isArray(prevFiles) ? prevFiles : [];
 
@@ -616,37 +545,6 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
       "RequestAttachmentsFiles",
       watch("RequestAttachmentsFiles").filter((file) => file.name !== fileNameToDelete.name),
     );
-
-    // try {
-    //   if (fileNameToDelete.ticketAttachmentId) {
-    //     const deletePayload = {
-    //       ticketAttachmentId: fileNameToDelete.ticketAttachmentId,
-    //     };
-    //     await deleteRequestorAttachment(deletePayload)
-    //       .unwrap()
-    //       .then(() => {
-    //         toast.success("Success!", {
-    //           description: "File deleted successfully.",
-    //           duration: 1500,
-    //         });
-    //         refetch();
-    //       })
-    //       .catch((err) => {
-    //         console.log("error: ", err);
-    //         toast.error("Error!", {
-    //           description: err.data.error.message,
-    //           duration: 1500,
-    //         });
-    //       });
-    //   }
-
-    //   setAttachments((prevFiles) => prevFiles.filter((fileName) => fileName !== fileNameToDelete));
-
-    //   setValue(
-    //     "RequestAttachmentsFiles",
-    //     watch("RequestAttachmentsFiles").filter((file) => file.name !== fileNameToDelete.name),
-    //   );
-    // } catch (error) {}
   };
 
   const handleDragOver = (event) => {
@@ -821,7 +719,6 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
       DateNeeded: null,
       ChannelId: null,
       CategoryId: [],
-      SubCategoryId: [],
 
       Concern: "",
       Notes: "",
@@ -986,16 +883,7 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
         category_Description: item.category_Description,
       }));
 
-      const subCategory = editData?.getRequestSubTicketCategories.map((item) => ({
-        ticketSubCategoryId: item.ticketSubCategoryId,
-        subCategoryId: item.subCategoryId,
-        sub_Category_Description: item.subCategory_Description,
-      }));
-
-      const categoryIdParams = editData?.getRequestTicketCategories?.map((item) => item?.categoryId);
-
       setValue("CategoryId", category);
-      setValue("SubCategoryId", subCategory);
 
       if (editData.notes === null) {
         setValue("Notes", "");
@@ -1004,25 +892,8 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
       }
 
       getAttachmentData(editData.ticketRequestConcerns.map((item) => item.ticketConcernId));
-      getSubCategory({
-        CategoryId: categoryIdParams,
-      });
     }
   }, [editData, companyIsLoading, businessUnitIsLoading, departmentIsLoading, unitIsLoading, subUnitIsLoading, locationIsLoading]);
-
-  useEffect(() => {
-    const selectedCategories = watch("CategoryId");
-    const selectedSubCategories = watch("SubCategoryId");
-
-    if (selectedCategories.length > 0) {
-      const filteredSubCategories = selectedSubCategories.filter((subCategory) =>
-        selectedCategories.some((category) => subCategoryData?.value?.some((item) => item.subCategoryId === subCategory.subCategoryId && item.categoryId === category.id)),
-      );
-      setValue("SubCategoryId", filteredSubCategories);
-    } else {
-      setValue("SubCategoryId", []);
-    }
-  }, [subCategoryData]);
 
   return (
     <>
@@ -1514,7 +1385,6 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
 
                               setValue("ChannelId", null);
                               setValue("CategoryId", []);
-                              setValue("SubCategoryId", []);
                             }}
                             getOptionLabel={(option) => option.serviceProviderName}
                             isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -1550,7 +1420,6 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
                               onChange(value);
 
                               setValue("CategoryId", []);
-                              setValue("SubCategoryId", []);
                             }}
                             getOptionLabel={(option) => option.channelName}
                             isOptionEqualToValue={(option, value) => option.channelId === value.channelId}
@@ -1566,91 +1435,46 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
                 </Stack>
 
                 {/* Category and Sub Category */}
-                <Stack sx={sx.twoColsBox}>
+                <Stack sx={sx.fieldOneColStack}>
                   {/* Category */}
-                  <Stack sx={sx.fieldTwoColsStack}>
-                    <Typography sx={sx.fieldText}>Category</Typography>
-                    <Controller
-                      control={control}
-                      name="CategoryId"
-                      render={({ field: { ref, value, onChange } }) => {
-                        return (
-                          <Autocomplete
-                            multiple
-                            ref={ref}
-                            size="small"
-                            value={value}
-                            options={
-                              editData
-                                ? categoryData?.value?.category?.filter((item) => item.channelId === watch("ChannelId")?.channelId) || []
-                                : categoryData?.value?.category?.filter((item) => item.channelId === watch("ChannelId")?.id) || []
-                            }
-                            loading={categoryIsLoading}
-                            renderInput={(params) => <TextField {...params} placeholder="Select Category" sx={sx.autoComplete} />}
-                            onOpen={() => {
-                              if (!categoryIsSuccess)
-                                getCategory({
-                                  Status: true,
-                                });
-                            }}
-                            onChange={(_, value) => {
-                              onChange(value);
-
-                              const categoryIdParams = value?.map((category) => category?.id);
-
-                              if (watch("CategoryId").length === 0) {
-                                setValue("SubCategoryId", []);
-                              }
-
-                              getSubCategory({
-                                CategoryId: categoryIdParams,
+                  <Typography sx={sx.fieldText}>Category</Typography>
+                  <Controller
+                    control={control}
+                    name="CategoryId"
+                    render={({ field: { ref, value, onChange } }) => {
+                      return (
+                        <Autocomplete
+                          multiple
+                          ref={ref}
+                          size="small"
+                          value={value}
+                          options={
+                            editData
+                              ? categoryData?.value?.category?.filter((item) => item.channelId === watch("ChannelId")?.channelId) || []
+                              : categoryData?.value?.category?.filter((item) => item.channelId === watch("ChannelId")?.id) || []
+                          }
+                          loading={categoryIsLoading}
+                          renderInput={(params) => <TextField {...params} placeholder="Select Category" sx={sx.autoComplete} />}
+                          onOpen={() => {
+                            if (!categoryIsSuccess)
+                              getCategory({
+                                Status: true,
                               });
-                            }}
-                            getOptionLabel={(option) => option.category_Description || ""}
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            getOptionDisabled={(option) => watch("CategoryId").some((item) => item.id === option.id)}
-                            fullWidth
-                            disableClearable
-                            disabled
-                            componentsProps={sx.automCompleteProp}
-                          />
-                        );
-                      }}
-                    />
-                  </Stack>
-
-                  {/* Sub Category */}
-                  <Stack sx={sx.fieldTwoColsStack}>
-                    <Typography sx={sx.fieldText}>Sub Category</Typography>
-                    <Controller
-                      control={control}
-                      name="SubCategoryId"
-                      render={({ field: { ref, value, onChange } }) => {
-                        return (
-                          <Autocomplete
-                            multiple
-                            ref={ref}
-                            size="small"
-                            value={value}
-                            options={subCategoryData?.value || []}
-                            loading={subCategoryIsLoading}
-                            renderInput={(params) => <TextField {...params} placeholder="Select Sub Category" sx={sx.autoComplete} />}
-                            onChange={(_, value) => {
-                              onChange(value);
-                            }}
-                            getOptionLabel={(option) => option?.sub_Category_Description || ""}
-                            isOptionEqualToValue={(option, value) => option?.subCategoryId === value?.subCategoryId}
-                            getOptionDisabled={(option) => watch("SubCategoryId").some((item) => item.subCategoryId === option.subCategoryId)}
-                            noOptionsText={"No sub category available"}
-                            fullWidth
-                            disableClearable
-                            disabled
-                            componentsProps={sx.automCompleteProp}
-                          />
-                        );
-                      }}
-                    />
-                  </Stack>
+                          }}
+                          onChange={(_, value) => {
+                            onChange(value);
+                          }}
+                          getOptionLabel={(option) => option.category_Description || ""}
+                          isOptionEqualToValue={(option, value) => option.id === value.id}
+                          getOptionDisabled={(option) => watch("CategoryId").some((item) => item.id === option.id)}
+                          fullWidth
+                          disableClearable
+                          disabled
+                          componentsProps={sx.automCompleteProp}
+                        />
+                      );
+                    }}
+                  />
                 </Stack>
 
                 {/* Date Needed */}

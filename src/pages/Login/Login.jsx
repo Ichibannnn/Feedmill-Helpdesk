@@ -157,6 +157,8 @@ const LoginForm = () => {
 
       const { token, ...user } = res.value;
 
+      console.log("Res: ", res);
+
       if (res?.value?.isPasswordChanged === null) {
         setGetPassword(watch("password"));
         setChangePasswordDetails(res);
@@ -378,7 +380,7 @@ export const ChangePassword = ({ changePasswordDetails, open, onClose, getPasswo
             }}
           >
             <Typography fontWeight="bold" variant="h5">
-              Change your passwords
+              Change your password
             </Typography>
             <Typography color="gray" fontSize="sm">
               To change your password, please fill in the fields below.
