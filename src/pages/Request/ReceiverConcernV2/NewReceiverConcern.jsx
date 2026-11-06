@@ -94,6 +94,7 @@ const NewReceiverConcern = () => {
   const { open: addTicketOpen, onClose: addTicketOnClose } = useDisclosure();
   const { open: takeTicketOpen, onToggle: takeTicketOnToggle, onClose: takeTicketOnClose } = useDisclosure();
 
+  const rows = data?.value?.requestConcern ?? [];
   const success = isSuccess && !isLoading && !isFetching;
   const no_records = isSuccess && !data?.value?.requestConcern.length && !isLoading && !isFetching;
   const loading = isLoading || isFetching;
@@ -261,7 +262,7 @@ const NewReceiverConcern = () => {
           <>
             <Stack spacing={2}>
               {success &&
-                data?.value?.requestConcern?.map((item, index) => {
+                rows?.map((item, index) => {
                   return (
                     <Card
                       key={index}
@@ -518,22 +519,11 @@ const NewReceiverConcern = () => {
         ) : (
           // Table
           <>
-            <TableContainer
-              sx={{
-                overflow: "auto",
-              }}
-            >
-              <Table stickyHeader size="small" sx={{ borderBottom: "none" }}>
+            <TableContainer>
+              <Table stickyHeader size="small" sx={sx.table}>
                 <TableHead sx={{ whiteSpace: "nowrap" }}>
                   <TableRow>
-                    <TableCell
-                      sx={{
-                        background: "#1C2536",
-                        color: "#D65DB1",
-                        fontWeight: 700,
-                        fontSize: "11px",
-                      }}
-                    >
+                    <TableCell sx={sx.headCell}>
                       TICKET NO.
                       <IconButton
                         size="small"
@@ -541,103 +531,24 @@ const NewReceiverConcern = () => {
                           setAscending(!ascending);
                         }}
                       >
-                        <SwapVertOutlined sx={{ color: "#D65DB1", fontSize: "25px" }} />
+                        <SwapVertOutlined sx={sx.sortIcon} />
                       </IconButton>
                     </TableCell>
 
-                    <TableCell
-                      sx={{
-                        background: "#1C2536",
-                        color: "#D65DB1",
-                        fontWeight: 700,
-                        fontSize: "11px",
-                      }}
-                    >
-                      REQUESTOR
-                    </TableCell>
-
-                    <TableCell
-                      sx={{
-                        background: "#1C2536",
-                        color: "#D65DB1",
-                        fontWeight: 700,
-                        fontSize: "11px",
-                      }}
-                    >
-                      CONCERN
-                    </TableCell>
-
-                    <TableCell
-                      sx={{
-                        background: "#1C2536",
-                        color: "#D65DB1",
-                        fontWeight: 700,
-                        fontSize: "11px",
-                      }}
-                    >
-                      SERVICE PROVIDER
-                    </TableCell>
-
-                    <TableCell
-                      sx={{
-                        background: "#1C2536",
-                        color: "#D65DB1",
-                        fontWeight: 700,
-                        fontSize: "11px",
-                      }}
-                    >
-                      CHANNEL
-                    </TableCell>
-
-                    <TableCell
-                      sx={{
-                        background: "#1C2536",
-                        color: "#D65DB1",
-                        fontWeight: 700,
-                        fontSize: "11px",
-                      }}
-                    >
-                      CATEGORY
-                    </TableCell>
-
-                    <TableCell
-                      sx={{
-                        background: "#1C2536",
-                        color: "#D65DB1",
-                        fontWeight: 700,
-                        fontSize: "11px",
-                      }}
-                    >
-                      DATE CREATED
-                    </TableCell>
-
-                    <TableCell
-                      sx={{
-                        background: "#1C2536",
-                        color: "#D65DB1",
-                        fontWeight: 700,
-                        fontSize: "11px",
-                      }}
-                    >
-                      DATE NEEDED
-                    </TableCell>
-
-                    <TableCell
-                      sx={{
-                        background: "#1C2536",
-                        color: "#D65DB1",
-                        fontWeight: 700,
-                        fontSize: "11px",
-                      }}
-                    >
-                      CREATED BY
-                    </TableCell>
+                    <TableCell sx={sx.headCell}>REQUESTOR</TableCell>
+                    <TableCell sx={sx.headCell}>CONCERN</TableCell>
+                    <TableCell sx={sx.headCell}>SERVICE PROVIDER</TableCell>
+                    <TableCell sx={sx.headCell}>CHANNEL</TableCell>
+                    <TableCell sx={sx.headCell}>CATEGORY</TableCell>
+                    <TableCell sx={sx.headCell}>DATE CREATED</TableCell>
+                    <TableCell sx={sx.headCell}>DATE NEEDED</TableCell>
+                    <TableCell sx={sx.headCell}>CREATED BY</TableCell>
                   </TableRow>
                 </TableHead>
 
                 <TableBody>
                   {success &&
-                    data?.value?.requestConcern?.map((item) => {
+                    rows?.map((item) => {
                       return (
                         <TableRow
                           key={item.requestConcernId}
@@ -658,15 +569,13 @@ const NewReceiverConcern = () => {
                             align="center"
                           >
                             <Stack sx={{ flexDirection: "row", alignItems: "center" }}>
-                              <Stack>
-                                <Checkbox
-                                  checked={isSelected(item)}
-                                  onChange={() => handleSelectTicket(item)}
-                                  inputProps={{
-                                    "aria-label": `select ticket ${item?.ticketRequestConcerns[0]?.ticketConcernId}`,
-                                  }}
-                                />
-                              </Stack>
+                              <Checkbox
+                                checked={isSelected(item)}
+                                onChange={() => handleSelectTicket(item)}
+                                inputProps={{
+                                  "aria-label": `select ticket ${item?.ticketRequestConcerns[0]?.ticketConcernId}`,
+                                }}
+                              />
                               {item.severity === "Urgent" && <FlashOn color="warning" />}
                               <Typography sx={{ fontSize: "12px" }}>{`${moment(item.created_At).format("YYYY")}-${item.ticketRequestConcerns[0]?.ticketConcernId}`}</Typography>
                             </Stack>
@@ -826,39 +735,6 @@ const NewReceiverConcern = () => {
                   {loading && <TableSkeleton columns={tableColumns} rows={10} cellSx={sx.tableCellBody} />}
                   {no_records && <NoRecordsFoundTable colSpan={9} label="No records found" />}
                   {isError && <SomethingWentWrongTable colSpan={9} label="Something went wrong." />}
-
-                  {/* {isError && (
-                    <TableRow>
-                      <TableCell colSpan={12} align="center">
-                        <img src={somethingWentWrong} alt="Something Went Wrong" className="something-went-wrong-table" />
-                        <Typography variant="h5" color="#EDF2F7" marginLeft={2}>
-                          Something went wrong.
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
-
-                  {(isLoading || isFetching) && (
-                    <TableRow>
-                      <TableCell colSpan={12} align="center">
-                        <CircularProgress />
-                        <Typography variant="h5" color="#EDF2F7">
-                          Please wait...
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
-
-                  {isSuccess && !data?.value?.requestConcern.length && !isLoading && !isFetching && (
-                    <TableRow>
-                      <TableCell colSpan={12} align="center">
-                        <img src={noRecordsFound} alt="No Records Found" className="norecords-found-table" />
-                        <Typography variant="h5" color="#EDF2F7" marginLeft={2}>
-                          No records found.
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )} */}
                 </TableBody>
               </Table>
             </TableContainer>

@@ -172,6 +172,8 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
     return initials.split("").reverse().join("");
   };
 
+  console.log("Data: ", data);
+
   return (
     <>
       <Dialog
@@ -277,11 +279,9 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
                     {data?.getOpenTicketCategories?.length > 0 ? (
                       <>
                         {data?.getOpenTicketCategories?.map((item, i) => (
-                          <>
-                            <Typography key={i} sx={sx.ticketDescLabel}>
-                              {item.category_Description}
-                            </Typography>
-                          </>
+                          <Box key={i}>
+                            <Typography sx={sx.ticketDescLabel}>{item.category_Description}</Typography>
+                          </Box>
                         ))}
                       </>
                     ) : (

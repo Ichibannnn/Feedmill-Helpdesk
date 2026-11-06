@@ -1,22 +1,26 @@
-import { Badge, Divider, OutlinedInput, Stack, Tab, Tabs, Typography, useMediaQuery } from "@mui/material";
-import { DiscountOutlined, PendingOutlined, Search, WifiProtectedSetupOutlined } from "@mui/icons-material";
+import { Autocomplete, Badge, Divider, OutlinedInput, Stack, Tab, Tabs, TextField, Typography, useMediaQuery } from "@mui/material";
+import { CommentOutlined, DiscountOutlined, PendingOutlined, Search, WifiProtectedSetupOutlined } from "@mui/icons-material";
 
-import { useEffect, useState } from "react";
-import { theme } from "../../../theme/theme";
+import * as yup from "yup";
 import useDebounce from "../../../hooks/useDebounce";
 
-import {
-  useGetOnHoldApprovalQuery,
-  useGetTargetApprovalQuery,
-  useGetTicketApprovalQuery,
-  useGetTransferApprovalQuery,
-} from "../../../features/api_ticketing/approver/ticketApprovalApi";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { theme } from "../../../theme/theme";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Controller, set, useForm } from "react-hook-form";
+import { approverStyles as sx } from "../styles/approverStyles";
+
+import { useGetOnHoldApprovalQuery } from "../../../features/api_ticketing/approver/ticketApprovalApi";
 import { useGetNotificationQuery } from "../../../features/api_notification/notificationApi";
 
-import TargetApproval from "./TargetApproval/TargetApproval";
-import TicketApproval from "./TicketApproval/TicketApproval";
-import ForTransfer from "./ForTransferApproval/ForTransfer";
 import OnHoldApproval from "./OnHoldApproval/OnHoldApproval";
+import ConcernApproval from "../ConcernApproval/ConcernApproval";
+import { useLazyGetCategoryQuery } from "../../../features/api masterlist/category_api/categoryApi";
+
+const schema = yup.object().shape({
+  CategoryId: yup.object().notRequired(),
+});
 
 const Approval = () => {
   const [tabNavigation, setTabNavigation] = useState("1");
@@ -25,44 +29,18 @@ const Approval = () => {
 
   const [searchValue, setSearchValue] = useState("");
   const search = useDebounce(searchValue, 500);
+  const userChannelId = useSelector((state) => state?.user?.channels?.[0]?.channelId);
   const isScreenSmall = useMediaQuery(theme.breakpoints.down("md"));
 
   const { data: notificationBadge } = useGetNotificationQuery();
+  const [getCategory, { data: categoryData, isLoading: categoryIsLoading, isSuccess: categoryIsSuccess }] = useLazyGetCategoryQuery();
 
-  const {
-    data: targetApprovalData,
-    isLoading: targetApprovalIsLoading,
-    isFetching: targetApprovalIsFetching,
-    isSuccess: targetApprovalIsSuccess,
-    isError: targetApprovalIsError,
-  } = useGetTargetApprovalQuery({
-    Search: search,
-    PageNumber: pageNumber,
-    PageSize: pageSize,
-  });
-
-  const {
-    data: ticketApprovalData,
-    isLoading: ticketApprovalIsLoading,
-    isFetching: ticketApprovalIsFetching,
-    isSuccess: ticketApprovalIsSuccess,
-    isError: ticketApprovalIsError,
-  } = useGetTicketApprovalQuery({
-    Search: search,
-    PageNumber: pageNumber,
-    PageSize: pageSize,
-  });
-
-  const {
-    data: transferData,
-    isLoading: transferIsLoading,
-    isFetching: transferIsFetching,
-    isSuccess: transferIsSuccess,
-    isError: transferIsError,
-  } = useGetTransferApprovalQuery({
-    Search: search,
-    PageNumber: pageNumber,
-    PageSize: pageSize,
+  const { control, watch, setValue, resetField } = useForm({
+    resolver: yupResolver(schema),
+    mode: "onChange",
+    defaultValues: {
+      CategoryId: null,
+    },
   });
 
   const {
@@ -82,6 +60,7 @@ const Approval = () => {
     setPageNumber(1);
     setPageSize(100);
     setSearchValue("");
+    setValue("CategoryId", null);
   };
 
   useEffect(() => {
@@ -89,6 +68,12 @@ const Approval = () => {
       setPageNumber(1);
     }
   }, [searchValue]);
+
+  useEffect(() => {
+    if (tabNavigation === "2") {
+      setValue("CategoryId", null);
+    }
+  }, [tabNavigation, setValue]);
 
   return (
     <Stack
@@ -141,10 +126,10 @@ const Approval = () => {
             <Tab
               value="1"
               className="tabs-styling"
-              label="Ticket Requests"
+              label="Concern Approval"
               icon={
                 <Badge
-                  badgeContent={notificationBadge?.value?.forApprovalTargetDate}
+                  // badgeContent={notificationBadge?.value?.forApprovalTargetDate}
                   max={100000}
                   color="error"
                   anchorOrigin={{
@@ -158,7 +143,7 @@ const Approval = () => {
                     },
                   }}
                 >
-                  <DiscountOutlined />
+                  <CommentOutlined />
                 </Badge>
               }
               iconPosition="start"
@@ -173,72 +158,6 @@ const Approval = () => {
 
             <Tab
               value="2"
-              className="tabs-styling"
-              label="For Closing"
-              icon={
-                <Badge
-                  badgeContent={notificationBadge?.value?.forApprovalClosingNotif}
-                  max={100000}
-                  color="error"
-                  anchorOrigin={{
-                    vertical: "top",
-                    horizontal: "left",
-                  }}
-                  sx={{
-                    ".MuiBadge-badge": {
-                      fontSize: "0.55rem",
-                      fontWeight: 400,
-                    },
-                  }}
-                >
-                  <DiscountOutlined />
-                </Badge>
-              }
-              iconPosition="start"
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                ".MuiBadge-badge": {
-                  color: "#ffff",
-                },
-              }}
-            />
-
-            <Tab
-              value="3"
-              className="tabs-styling"
-              label="For Transfer"
-              icon={
-                <Badge
-                  badgeContent={notificationBadge?.value?.forApprovalTransferNotif}
-                  max={100000}
-                  color="error"
-                  anchorOrigin={{
-                    vertical: "top",
-                    horizontal: "left",
-                  }}
-                  sx={{
-                    ".MuiBadge-badge": {
-                      fontSize: "0.55rem",
-                      fontWeight: 400,
-                    },
-                  }}
-                >
-                  <WifiProtectedSetupOutlined />
-                </Badge>
-              }
-              iconPosition="start"
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-                ".MuiBadge-badge": {
-                  color: "#ffff",
-                },
-              }}
-            />
-
-            <Tab
-              value="4"
               className="tabs-styling"
               label="On Hold"
               icon={
@@ -272,58 +191,66 @@ const Approval = () => {
           </Tabs>
         </Stack>
 
-        <Divider variant="fullWidth" sx={{ background: "#2D3748", marginTop: "1px" }} />
+        <Divider variant="fullWidth" sx={sx.pageDivider} />
 
-        <Stack sx={{ width: "100%", padding: 1 }}>
+        <Stack sx={sx.filterSearchBox}>
           <OutlinedInput
             placeholder="Search"
             startAdornment={<Search sx={{ marginRight: 0.5, color: "#A0AEC0" }} />}
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             sx={{
-              borderRadius: "15px",
-              fontSize: "small",
+              fontSize: "13px",
               fontWeight: 400,
               lineHeight: "1.4375rem",
+              flex: 1,
             }}
           />
+
+          {tabNavigation === "1" && (
+            <Stack sx={sx.filterCatBox}>
+              <Controller
+                control={control}
+                name="CategoryId"
+                render={({ field: { ref, value, onChange } }) => {
+                  return (
+                    <Autocomplete
+                      ref={ref}
+                      value={value}
+                      options={categoryData?.value?.category?.filter((item) => item.channelId === userChannelId) || []}
+                      loading={categoryIsLoading}
+                      renderInput={(params) => <TextField {...params} label="Category" sx={sx.textField} />}
+                      onOpen={() => {
+                        if (!categoryIsSuccess)
+                          getCategory({
+                            Status: true,
+                          });
+                      }}
+                      onChange={(_, value) => onChange(value)}
+                      getOptionLabel={(option) => `${option.category_Description}`}
+                      isOptionEqualToValue={(option, value) => option.id === value.id}
+                      fullWidth
+                    />
+                  );
+                }}
+              />
+            </Stack>
+          )}
         </Stack>
 
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           {tabNavigation === "1" ? (
             <>
-              <TargetApproval
-                data={targetApprovalData}
-                isLoading={targetApprovalIsLoading}
-                isFetching={targetApprovalIsFetching}
-                isSuccess={targetApprovalIsSuccess}
-                isError={targetApprovalIsError}
-                setPageNumber={setPageNumber}
-                setPageSize={setPageSize}
-              />
-            </>
-          ) : tabNavigation === "2" ? (
-            <>
-              <TicketApproval
-                data={ticketApprovalData}
-                isLoading={ticketApprovalIsLoading}
-                isFetching={ticketApprovalIsFetching}
-                isSuccess={ticketApprovalIsSuccess}
-                isError={ticketApprovalIsError}
-                setPageNumber={setPageNumber}
-                setPageSize={setPageSize}
-              />
-            </>
-          ) : tabNavigation === "3" ? (
-            <>
-              <ForTransfer
-                data={transferData}
-                isLoading={transferIsLoading}
-                isFetching={transferIsFetching}
-                isSuccess={transferIsSuccess}
-                isError={transferIsError}
-                setPageNumber={setPageNumber}
-                setPageSize={setPageSize}
+              <ConcernApproval
+                search={search}
+                categoryId={watch("CategoryId")?.id}
+                // data={targetApprovalData}
+                // isLoading={targetApprovalIsLoading}
+                // isFetching={targetApprovalIsFetching}
+                // isSuccess={targetApprovalIsSuccess}
+                // isError={targetApprovalIsError}
+                // setPageNumber={setPageNumber}
+                // setPageSize={setPageSize}
               />
             </>
           ) : (

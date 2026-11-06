@@ -103,8 +103,9 @@ const ConcernTickets = () => {
   const [confirmConcern, { isLoading: confirmConcernIsLoading, isFetching: confirmConcernIsFetching }] = useConfirmConcernMutation();
   const [cancelConcern] = useCancelConcernMutation();
 
+  const rows = data?.value?.requestConcern ?? [];
   const success = isSuccess && !isLoading && !isFetching;
-  const no_records = isSuccess && !data?.value?.requestConcern.length && !isLoading && !isFetching;
+  const no_records = isSuccess && !rows.length && !isLoading && !isFetching;
   const loading = isLoading || isFetching;
   const error = isError;
 
@@ -330,7 +331,7 @@ const ConcernTickets = () => {
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      const allTicketIds = data?.value?.requestConcern.map((item) => item.requestConcernId) || [];
+      const allTicketIds = rows.map((item) => item.requestConcernId) || [];
       setSelectedTickets(allTicketIds);
     } else {
       setSelectedTickets([]);
@@ -547,8 +548,8 @@ const ConcernTickets = () => {
                   }}
                 >
                   <Checkbox
-                    indeterminate={selectedTickets.length > 0 && selectedTickets.length < (data?.value?.requestConcern?.length || 0)}
-                    checked={(data?.value?.requestConcern?.length || 0) > 0 && selectedTickets.length === (data?.value?.requestConcern?.length || 0)}
+                    indeterminate={selectedTickets.length > 0 && selectedTickets.length < (rows?.length || 0)}
+                    checked={(rows?.length || 0) > 0 && selectedTickets.length === (rows?.length || 0)}
                     onChange={handleSelectAll}
                     inputProps={{ "aria-label": "select all tickets" }}
                   />
@@ -558,7 +559,7 @@ const ConcernTickets = () => {
 
               <Stack spacing={2} sx={{ padding: 2 }}>
                 {success &&
-                  data?.value?.requestConcern?.map((item, index) => (
+                  rows?.map((item, index) => (
                     <Card key={index} sx={sx.cards}>
                       <CardContent sx={sx.cardContent}>
                         <Stack spacing={1} direction="row" alignItems="center">
@@ -774,7 +775,7 @@ const ConcernTickets = () => {
 
                   <TableBody>
                     {success &&
-                      data?.value?.requestConcern?.map((item, index) => {
+                      rows?.map((item, index) => {
                         const isSelected = selectedTickets.includes(item.requestConcernId);
 
                         return (

@@ -18,7 +18,6 @@ import {
 } from "@mui/material";
 import { Search, SyncOutlined } from "@mui/icons-material";
 
-import Swal from "sweetalert2";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { LoadingButton } from "@mui/lab";

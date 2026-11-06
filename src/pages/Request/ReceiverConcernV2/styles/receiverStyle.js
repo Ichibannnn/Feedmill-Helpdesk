@@ -263,6 +263,32 @@ export const receiverStyle = {
     justifyContent: "space-between",
   },
 
+  // Table
+  table: {
+    borderBottom: "none",
+    fontSize: { xs: "10px", sm: "12px", md: "14px" },
+  },
+
+  headCell: {
+    background: "#1C2536",
+    color: "#D65DB1",
+    fontWeight: 700,
+    fontSize: "11px",
+  },
+
+  bodyCell: {
+    color: "#EDF2F7",
+    fontSize: "14px",
+    fontWeight: 500,
+    borderBottom: "1px solid #1E2A3D",
+    paddingY: "14px",
+  },
+
+  sortIcon: {
+    color: "#D65DB1",
+    fontSize: "25px",
+  },
+
   // ** Attachment
   attachmentBox: {
     width: "100%",

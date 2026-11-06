@@ -90,7 +90,6 @@ import { CardListSkeleton, NoRecordsFound, NoRecordsFoundTable, SomethingWentWro
 
 const IssueHandlerConcerns = () => {
   const theming = useTheme();
-  const isMobile = useMediaQuery(theming.breakpoints.down("sm"));
   const ascending = useSelector((state) => state.root.ascending);
   const pageNumber = useSelector((state) => state.root.pageNumber);
   const pageSize = useSelector((state) => state.root.pageSize);
@@ -148,8 +147,9 @@ const IssueHandlerConcerns = () => {
     PageSize: pageSize,
   });
 
+  const rows = data?.value?.openTicket ?? [];
   const success = isSuccess && !isLoading && !isFetching;
-  const no_records = isSuccess && !data?.value?.openTicket.length && !isLoading && !isFetching;
+  const no_records = isSuccess && !rows.length && !isLoading && !isFetching;
   const loading = isLoading || isFetching;
   const error = isError;
 
@@ -214,8 +214,6 @@ const IssueHandlerConcerns = () => {
   };
 
   const onPrintTicketAction = async (data) => {
-    console.log("Data: ", data);
-
     Swal.fire({
       title: "Printing Service Report...",
       allowOutsideClick: false,
@@ -553,8 +551,6 @@ const IssueHandlerConcerns = () => {
   };
 
   const onConfirmAction = (data) => {
-    console.log("Data: ", data);
-
     const payload = {
       confirmTicketRequests: [
         {
@@ -663,8 +659,8 @@ const IssueHandlerConcerns = () => {
   };
 
   const selectableTickets = useMemo(() => {
-    return data?.value?.openTicket?.filter((item) => item.requestor_Name === userDetails?.fullname) || [];
-  }, [data?.value?.openTicket, userDetails?.fullname]);
+    return rows?.filter((item) => item.requestor_Name === userDetails?.fullname) || [];
+  }, [rows, userDetails?.fullname]);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -723,524 +719,422 @@ const IssueHandlerConcerns = () => {
   ];
 
   return (
-    <Stack
-      sx={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        backgroundColor: theme.palette.bgForm.black1,
-        color: "#fff",
-        padding: isScreenSmall ? "20px" : "2px 64px 24px 64px",
-      }}
-    >
-      <Stack>
-        <Stack direction="row" justifyContent="space-between">
-          <Stack justifyItems="left">
-            <Typography variant={isScreenSmall ? "h5" : "h4"}>Tickets</Typography>
+    <Stack sx={sx.mainContainer}>
+      {/* Header */}
+      <Stack sx={sx.pageHeader}>
+        <Typography variant={isScreenSmall ? "h5" : "h4"}>Tickets</Typography>
+
+        <Button size={isScreenSmall ? "small" : "medium"} variant="contained" color="primary" startIcon={<DiscountOutlined />} onClick={addTicketOnToggle} sx={{ fontSize: "11px" }}>
+          Add Ticket
+        </Button>
+      </Stack>
+
+      {/* Selection */}
+      {selectedTickets.length > 0 && (
+        <Stack sx={sx.selectionContainer}>
+          <Stack direction="row" gap={0.5}>
+            <LocalOffer />
+            <Typography>
+              {selectedTickets.length} {""}
+              {selectedTickets.length > 1 ? "Tickets selected" : "Ticket selected"}
+            </Typography>
           </Stack>
-          <Stack justifyItems="space-between" direction="row">
-            <Stack justifyItems="space-between" direction="row" marginTop={1}>
-              <Button size={isScreenSmall ? "small" : "medium"} variant="contained" color="primary" startIcon={<DiscountOutlined />} onClick={addTicketOnToggle} sx={{ fontSize: "11px" }}>
-                Add Ticket
-              </Button>
-            </Stack>
+
+          <Stack direction="row" gap={0.5}>
+            <LoadingButton variant="contained" color="success" onClick={onSelectedConfirmAction} loading={confirmConcernIsLoading || confirmConcernIsFetching} startIcon={<Check />}>
+              Confirm
+            </LoadingButton>
+          </Stack>
+        </Stack>
+      )}
+
+      {/* Page Content */}
+      <Stack sx={sx.contentContainer}>
+        <Stack sx={sx.tabsContainer}>
+          <Tabs value={ticketStatus} onChange={onStatusChange} variant="scrollable" scrollButtons="auto" sx={sx.tabs}>
+            <Tab
+              className="tabs-styling"
+              value="For Approval"
+              label="Ticket Requests"
+              icon={
+                <Badge
+                  badgeContent={notificationBadge?.value?.approvalDateNotif}
+                  max={100000}
+                  color="warning"
+                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
+                  sx={{
+                    ".MuiBadge-badge": {
+                      fontSize: "0.55rem",
+                      fontWeight: 400,
+                    },
+                  }}
+                >
+                  <DiscountOutlined />
+                </Badge>
+              }
+              iconPosition="start"
+              sx={sx.tab}
+            />
+
+            <Tab
+              className="tabs-styling"
+              value="Date Rejected"
+              label="Declined"
+              icon={
+                <Badge
+                  badgeContent={notificationBadge?.value?.dateRejectedNotif}
+                  max={100000}
+                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
+                  sx={{
+                    ".MuiBadge-badge": {
+                      fontSize: "0.55rem",
+                      fontWeight: 400,
+                      background: "#ff7043",
+                      color: "#ffff",
+                    },
+                  }}
+                >
+                  <ThumbDownOffAlt />
+                </Badge>
+              }
+              iconPosition="start"
+              sx={sx.tab}
+            />
+
+            <Tab
+              className="tabs-styling"
+              value="Open Ticket"
+              label="Open"
+              icon={
+                <Badge
+                  badgeContent={notificationBadge?.value?.openTicketNotif}
+                  max={100000}
+                  color="warning"
+                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
+                  sx={{
+                    ".MuiBadge-badge": {
+                      fontSize: "0.55rem",
+                      fontWeight: 400,
+                      color: "#ffff",
+                    },
+                  }}
+                >
+                  <DiscountOutlined />
+                </Badge>
+              }
+              iconPosition="start"
+              sx={sx.tabs}
+            />
+
+            <Tab
+              className="tabs-styling"
+              value="For Transfer"
+              label="For Transfer"
+              icon={
+                <Badge
+                  badgeContent={notificationBadge?.value?.forTransferNotif}
+                  max={100000}
+                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
+                  sx={{
+                    ".MuiBadge-badge": {
+                      fontSize: "0.55rem",
+                      fontWeight: 400,
+                      background: "#ff7043",
+                      color: "#ffff",
+                    },
+                  }}
+                >
+                  <MoveDownOutlined />
+                </Badge>
+              }
+              iconPosition="start"
+              sx={{
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            />
+
+            <Tab
+              className="tabs-styling"
+              value="For On-Hold"
+              label="Hold Approval"
+              icon={
+                <Badge
+                  badgeContent={notificationBadge?.value?.forOnHoldNotif}
+                  max={100000}
+                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
+                  sx={{
+                    ".MuiBadge-badge": {
+                      fontSize: "0.55rem",
+                      fontWeight: 400,
+                      background: "#ffb74d",
+                      color: "#ffff",
+                    },
+                  }}
+                >
+                  <MoveDownOutlined />
+                </Badge>
+              }
+              iconPosition="start"
+              sx={{
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            />
+
+            <Tab
+              className="tabs-styling"
+              value="On-Hold"
+              label="On Hold"
+              icon={
+                <Badge
+                  badgeContent={notificationBadge?.value?.onHold}
+                  max={100000}
+                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
+                  sx={{
+                    ".MuiBadge-badge": {
+                      fontSize: "0.55rem",
+                      fontWeight: 400,
+                      background: "#ff6d00",
+                      color: "#ffff",
+                    },
+                  }}
+                >
+                  <PendingOutlined />
+                </Badge>
+              }
+              iconPosition="start"
+              sx={{
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            />
+
+            <Tab
+              className="tabs-styling"
+              value="For Closing Ticket"
+              label="For Closing"
+              icon={
+                <Badge
+                  badgeContent={notificationBadge?.value?.forCloseNotif}
+                  max={100000}
+                  // color="primary"
+                  anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "left",
+                  }}
+                  sx={{
+                    ".MuiBadge-badge": {
+                      fontSize: "0.55rem",
+                      fontWeight: 400,
+                      background: "#3A96FA",
+                      color: "#ffff",
+                    },
+                  }}
+                >
+                  <PendingActionsOutlined />
+                </Badge>
+              }
+              iconPosition="start"
+              sx={{
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            />
+
+            <Tab
+              value="For Confirmation"
+              className="tabs-styling"
+              label="For Confirmation"
+              icon={
+                <Badge
+                  badgeContent={notificationBadge?.value?.notConfirmCloseNotif}
+                  max={100000}
+                  anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "left",
+                  }}
+                  sx={{
+                    ".MuiBadge-badge": {
+                      fontSize: "0.55rem",
+                      fontWeight: 400,
+                      background: "#009688",
+                      color: "#ffff",
+                    },
+                  }}
+                >
+                  <PendingActionsOutlined />
+                </Badge>
+              }
+              iconPosition="start"
+              sx={{
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            />
+
+            <Tab
+              className="tabs-styling"
+              value="Closed"
+              label="Closed"
+              icon={
+                <Badge
+                  badgeContent={notificationBadge?.value?.closedNotif}
+                  max={100000}
+                  color="success"
+                  anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "left",
+                  }}
+                  sx={{
+                    ".MuiBadge-badge": {
+                      fontSize: "0.55rem",
+                      fontWeight: 400,
+                      color: "#ffff",
+                    },
+                  }}
+                >
+                  <DoneAllOutlined />
+                </Badge>
+              }
+              iconPosition="start"
+              sx={{
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            />
+
+            <Tab
+              className="tabs-styling"
+              value=""
+              label="History"
+              icon={
+                <Badge
+                  badgeContent={notificationBadge?.value?.allTicketNotif}
+                  max={100000}
+                  color="primary"
+                  anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "left",
+                  }}
+                  sx={{
+                    ".MuiBadge-badge": {
+                      fontSize: "0.55rem",
+                      fontWeight: 400,
+                    },
+                  }}
+                >
+                  <HistoryToggleOffOutlined />
+                </Badge>
+              }
+              iconPosition="start"
+              sx={{
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            />
+          </Tabs>
+
+          <Stack direction="row" sx={{ alignItems: "center", justifyContent: "center" }}>
+            {ticketStatus === "" && (
+              <TicketFiltering filterStatus={filterStatus} setFilterStatus={setFilterStatus} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} />
+            )}
           </Stack>
         </Stack>
 
-        {selectedTickets.length > 0 && (
-          <Stack
-            direction={isScreenSmall ? "column" : "row"}
-            alignItems={isScreenSmall ? "left" : "center"}
-            justifyContent="space-between"
-            gap={0.5}
-            sx={{
-              padding: "10px 20px",
-              backgroundColor: theme.palette.bgForm.black2,
-              borderRadius: "20px",
-              marginBottom: 0.5,
-              marginTop: 0.5,
-            }}
-          >
-            <Stack direction="row" gap={0.5}>
-              <LocalOffer />
-              <Typography>
-                {selectedTickets.length} {""}
-                {selectedTickets.length > 1 ? "Tickets selected" : "Ticket selected"}
-              </Typography>
-            </Stack>
+        <Divider variant="fullWidth" sx={sx.divider} />
 
-            <Stack direction="row" gap={0.5}>
-              <LoadingButton variant="contained" color="success" onClick={onSelectedConfirmAction} loading={confirmConcernIsLoading || confirmConcernIsFetching} startIcon={<Check />}>
-                Confirm
-              </LoadingButton>
-            </Stack>
-          </Stack>
-        )}
+        <Stack sx={sx.searchContainer}>
+          <OutlinedInput placeholder="Search" startAdornment={<Search sx={sx.searchIcon} />} value={searchValue} onChange={(e) => dispatch(setSearchValue(e.target.value))} sx={sx.search} />
+        </Stack>
 
-        <Stack
-          sx={{
-            backgroundColor: theme.palette.bgForm.black3,
-            borderRadius: "20px",
-            marginTop: "5px",
-            width: "100%",
-          }}
-        >
-          <Stack direction="row" justifyContent="space-between" paddingLeft={1} paddingRight={1}>
-            <Tabs
-              value={ticketStatus}
-              onChange={onStatusChange}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{
-                ".MuiTab-root": {
-                  minWidth: isMobile ? "80px" : "120px",
-                  fontSize: { xs: "10px", sm: "12px", md: "13px" },
-                },
-                ".MuiTabs-scrollButtons": {
-                  color: "#fff",
-                  "&.Mui-disabled": {
-                    opacity: 0.3,
-                  },
-                },
-              }}
-            >
-              <Tab
-                value="For Approval"
-                className="tabs-styling"
-                label="Ticket Requests"
-                icon={
-                  <Badge
-                    badgeContent={notificationBadge?.value?.approvalDateNotif}
-                    max={100000}
-                    color="warning"
-                    anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                    sx={{
-                      ".MuiBadge-badge": {
-                        fontSize: "0.55rem",
-                        fontWeight: 400,
-                      },
-                    }}
-                  >
-                    <DiscountOutlined />
-                  </Badge>
-                }
-                iconPosition="start"
+        {isScreenSmall ? (
+          // Card
+          <>
+            {ticketStatus === "For Confirmation" && (
+              <Stack
+                direction="row"
                 sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  ".MuiBadge-badge": {
-                    color: "#ffff",
-                  },
+                  width: "100%",
+                  mb: 2,
+                  justifyContent: "left",
+                  alignItems: "center",
+                  backgroundColor: "#2A2C4D",
                 }}
-              />
+              >
+                <Checkbox
+                  indeterminate={selectedTickets.length > 0 && selectedTickets.length < selectableTickets.length}
+                  checked={selectableTickets.length > 0 && selectedTickets.length === selectableTickets.length}
+                  onChange={handleSelectAll}
+                  inputProps={{ "aria-label": "select all tickets" }}
+                />
+                <Typography>Select All</Typography>
+              </Stack>
+            )}
 
-              <Tab
-                value="Date Rejected"
-                className="tabs-styling"
-                label="Declined"
-                icon={
-                  <Badge
-                    badgeContent={notificationBadge?.value?.dateRejectedNotif}
-                    max={100000}
-                    anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                    sx={{
-                      ".MuiBadge-badge": {
-                        fontSize: "0.55rem",
-                        fontWeight: 400,
-                        background: "#ff7043",
-                        color: "#ffff",
-                      },
-                    }}
-                  >
-                    <ThumbDownOffAlt />
-                  </Badge>
-                }
-                iconPosition="start"
-                sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  ".MuiBadge-badge": {
-                    color: "#ffff",
-                  },
-                }}
-              />
+            <Stack spacing={2}>
+              {success &&
+                rows?.map((item) => (
+                  <Card key={item.ticketConcernId} sx={sx.cards}>
+                    <CardContent sx={sx.cardContent}>
+                      <Stack
+                        spacing={1}
+                        direction="row"
+                        sx={{
+                          alignItems: "center",
+                        }}
+                      >
+                        {/* Confirmation Checkbox */}
+                        {ticketStatus === "For Confirmation" && (
+                          <Stack>
+                            <Checkbox
+                              checked={selectedTickets.includes(item.requestConcernId)}
+                              onChange={() => handleSelectTicket(item.requestConcernId)}
+                              inputProps={{
+                                "aria-label": `select ticket ${item.ticketConcernId}`,
+                              }}
+                              disabled={item?.requestor_Name !== userDetails?.fullname}
+                            />
+                          </Stack>
+                        )}
 
-              <Tab
-                value="Open Ticket"
-                className="tabs-styling"
-                label="Open"
-                icon={
-                  <Badge
-                    badgeContent={notificationBadge?.value?.openTicketNotif}
-                    max={100000}
-                    color="warning"
-                    anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                    sx={{
-                      ".MuiBadge-badge": {
-                        fontSize: "0.55rem",
-                        fontWeight: 400,
-                      },
-                    }}
-                  >
-                    <DiscountOutlined />
-                  </Badge>
-                }
-                iconPosition="start"
-                sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  ".MuiBadge-badge": {
-                    color: "#ffff",
-                  },
-                }}
-              />
+                        <Stack sx={{ width: "100%", gap: 1 }} onClick={() => onViewAction(item)}>
+                          {/* Ticket Number */}
+                          <Stack sx={global.cardRow}>
+                            <Box sx={global.cardDetailBox}>
+                              <Typography sx={global.cardTitle}>TICKET NUMBER:</Typography>
+                            </Box>
+                            <Box sx={global.cardSpacer} />
 
-              <Tab
-                value="For Transfer"
-                className="tabs-styling"
-                label="For Transfer"
-                icon={
-                  <Badge
-                    badgeContent={notificationBadge?.value?.forTransferNotif}
-                    max={100000}
-                    anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                    sx={{
-                      ".MuiBadge-badge": {
-                        fontSize: "0.55rem",
-                        fontWeight: 400,
-                        background: "#ff7043",
-                        color: "#ffff",
-                      },
-                    }}
-                  >
-                    <MoveDownOutlined />
-                  </Badge>
-                }
-                iconPosition="start"
-                sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                }}
-              />
+                            <Box sx={global.cardDescDetailBox}>
+                              <Typography sx={global.cardDescription}>{`${moment(item.created_At).format("YYYY")}-${item.ticketConcernId}`}</Typography>
+                            </Box>
+                          </Stack>
 
-              <Tab
-                value="For On-Hold"
-                className="tabs-styling"
-                label="Hold Approval"
-                icon={
-                  <Badge
-                    badgeContent={notificationBadge?.value?.forOnHoldNotif}
-                    max={100000}
-                    anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                    sx={{
-                      ".MuiBadge-badge": {
-                        fontSize: "0.55rem",
-                        fontWeight: 400,
-                        background: "#ffb74d",
-                        color: "#ffff",
-                      },
-                    }}
-                  >
-                    <MoveDownOutlined />
-                  </Badge>
-                }
-                iconPosition="start"
-                sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                }}
-              />
+                          {/* Ticket Description */}
+                          <Stack sx={global.cardRow}>
+                            <Box sx={global.cardDetailBox}>
+                              <Typography sx={global.cardTitle}>TICKET DESCRIPTION:</Typography>
+                            </Box>
+                            <Box sx={global.cardSpacer} />
 
-              <Tab
-                value="On-Hold"
-                className="tabs-styling"
-                label="On Hold"
-                icon={
-                  <Badge
-                    badgeContent={notificationBadge?.value?.onHold}
-                    max={100000}
-                    anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                    sx={{
-                      ".MuiBadge-badge": {
-                        fontSize: "0.55rem",
-                        fontWeight: 400,
-                        background: "#ff6d00",
-                        color: "#ffff",
-                      },
-                    }}
-                  >
-                    <PendingOutlined />
-                  </Badge>
-                }
-                iconPosition="start"
-                sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                }}
-              />
+                            <Box sx={global.cardDescDetailBox}>
+                              <Typography sx={global.cardDescription}>
+                                {item?.concern_Description?.split("\r\n")?.map((line, index) => (
+                                  <span key={index}>
+                                    {line}
+                                    <br />
+                                  </span>
+                                ))}
+                              </Typography>
+                            </Box>
+                          </Stack>
 
-              <Tab
-                value="For Closing Ticket"
-                className="tabs-styling"
-                label="For Closing"
-                icon={
-                  <Badge
-                    badgeContent={notificationBadge?.value?.forCloseNotif}
-                    max={100000}
-                    // color="primary"
-                    anchorOrigin={{
-                      vertical: "top",
-                      horizontal: "left",
-                    }}
-                    sx={{
-                      ".MuiBadge-badge": {
-                        fontSize: "0.55rem",
-                        fontWeight: 400,
-                        background: "#3A96FA",
-                        color: "#ffff",
-                      },
-                    }}
-                  >
-                    <PendingActionsOutlined />
-                  </Badge>
-                }
-                iconPosition="start"
-                sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                }}
-              />
-
-              <Tab
-                value="For Confirmation"
-                className="tabs-styling"
-                label="For Confirmation"
-                icon={
-                  <Badge
-                    badgeContent={notificationBadge?.value?.notConfirmCloseNotif}
-                    max={100000}
-                    anchorOrigin={{
-                      vertical: "top",
-                      horizontal: "left",
-                    }}
-                    sx={{
-                      ".MuiBadge-badge": {
-                        fontSize: "0.55rem",
-                        fontWeight: 400,
-                        background: "#009688",
-                        color: "#ffff",
-                      },
-                    }}
-                  >
-                    <PendingActionsOutlined />
-                  </Badge>
-                }
-                iconPosition="start"
-                sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                }}
-              />
-
-              <Tab
-                value="Closed"
-                className="tabs-styling"
-                label="Closed"
-                icon={
-                  <Badge
-                    badgeContent={notificationBadge?.value?.closedNotif}
-                    max={100000}
-                    color="success"
-                    anchorOrigin={{
-                      vertical: "top",
-                      horizontal: "left",
-                    }}
-                    sx={{
-                      ".MuiBadge-badge": {
-                        fontSize: "0.55rem",
-                        fontWeight: 400,
-                        color: "#ffff",
-                      },
-                    }}
-                  >
-                    <DoneAllOutlined />
-                  </Badge>
-                }
-                iconPosition="start"
-                sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                }}
-              />
-
-              <Tab
-                value=""
-                className="tabs-styling"
-                label="History"
-                icon={
-                  <Badge
-                    badgeContent={notificationBadge?.value?.allTicketNotif}
-                    max={100000}
-                    color="primary"
-                    anchorOrigin={{
-                      vertical: "top",
-                      horizontal: "left",
-                    }}
-                    sx={{
-                      ".MuiBadge-badge": {
-                        fontSize: "0.55rem",
-                        fontWeight: 400,
-                      },
-                    }}
-                  >
-                    <HistoryToggleOffOutlined />
-                  </Badge>
-                }
-                iconPosition="start"
-                sx={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                }}
-              />
-            </Tabs>
-
-            <Stack direction="row" sx={{ alignItems: "center", justifyContent: "center" }}>
-              {ticketStatus === "" && (
-                <TicketFiltering filterStatus={filterStatus} setFilterStatus={setFilterStatus} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} />
-              )}
-            </Stack>
-          </Stack>
-
-          <Divider
-            variant="fullWidth"
-            sx={{
-              background: "#2D3748",
-              marginBottom: 1,
-              lineHeight: 1,
-            }}
-          />
-
-          <Stack sx={{ width: "100%", padding: 1 }}>
-            <OutlinedInput
-              placeholder="Search"
-              startAdornment={<Search sx={{ marginRight: 0.5, color: "#A0AEC0" }} />}
-              value={searchValue}
-              onChange={(e) => dispatch(setSearchValue(e.target.value))}
-              sx={{
-                borderRadius: "15px",
-                fontSize: "small",
-                fontWeight: 400,
-                lineHeight: "1.4375rem",
-              }}
-            />
-          </Stack>
-
-          {isScreenSmall ? (
-            // Card
-            <>
-              {ticketStatus === "For Confirmation" && (
-                <Stack
-                  direction="row"
-                  sx={{
-                    width: "100%",
-                    mb: 2,
-                    justifyContent: "left",
-                    alignItems: "center",
-                    backgroundColor: "#2A2C4D",
-                  }}
-                >
-                  <Checkbox
-                    indeterminate={selectedTickets.length > 0 && selectedTickets.length < selectableTickets.length}
-                    checked={selectableTickets.length > 0 && selectedTickets.length === selectableTickets.length}
-                    onChange={handleSelectAll}
-                    inputProps={{ "aria-label": "select all tickets" }}
-                  />
-                  <Typography>Select All</Typography>
-                </Stack>
-              )}
-
-              <Stack spacing={2}>
-                {success &&
-                  data?.value?.openTicket?.map((item) => (
-                    <Card key={item.ticketConcernId} sx={sx.cards}>
-                      <CardContent sx={sx.cardContent}>
-                        <Stack
-                          spacing={1}
-                          direction="row"
-                          sx={{
-                            alignItems: "center",
-                          }}
-                        >
-                          {/* Confirmation Checkbox */}
-                          {ticketStatus === "For Confirmation" && (
-                            <Stack>
-                              <Checkbox
-                                checked={selectedTickets.includes(item.requestConcernId)}
-                                onChange={() => handleSelectTicket(item.requestConcernId)}
-                                inputProps={{
-                                  "aria-label": `select ticket ${item.ticketConcernId}`,
-                                }}
-                                disabled={item?.requestor_Name !== userDetails?.fullname}
-                              />
-                            </Stack>
-                          )}
-
-                          <Stack sx={{ width: "100%", gap: 1 }} onClick={() => onViewAction(item)}>
-                            {/* Ticket Number */}
+                          {/* Ticketed Date */}
+                          {ticketStatus !== "For Approval" && (
                             <Stack sx={global.cardRow}>
                               <Box sx={global.cardDetailBox}>
-                                <Typography sx={global.cardTitle}>TICKET NUMBER:</Typography>
-                              </Box>
-                              <Box sx={global.cardSpacer} />
-
-                              <Box sx={global.cardDescDetailBox}>
-                                <Typography sx={global.cardDescription}>{`${moment(item.created_At).format("YYYY")}-${item.ticketConcernId}`}</Typography>
-                              </Box>
-                            </Stack>
-
-                            {/* Ticket Description */}
-                            <Stack sx={global.cardRow}>
-                              <Box sx={global.cardDetailBox}>
-                                <Typography sx={global.cardTitle}>TICKET DESCRIPTION:</Typography>
-                              </Box>
-                              <Box sx={global.cardSpacer} />
-
-                              <Box sx={global.cardDescDetailBox}>
-                                <Typography sx={global.cardDescription}>
-                                  {item?.concern_Description?.split("\r\n")?.map((line, index) => (
-                                    <span key={index}>
-                                      {line}
-                                      <br />
-                                    </span>
-                                  ))}
-                                </Typography>
-                              </Box>
-                            </Stack>
-
-                            {/* Ticketed Date */}
-                            {ticketStatus !== "For Approval" && (
-                              <Stack sx={global.cardRow}>
-                                <Box sx={global.cardDetailBox}>
-                                  <Typography sx={global.cardTitle}>TICKETED DATE:</Typography>
-                                </Box>
-                                <Box sx={global.cardSpacer} />
-
-                                <Box sx={global.cardDescDetailBox}>
-                                  <Chip
-                                    variant="filled"
-                                    size="30px"
-                                    icon={<CalendarMonthOutlined fontSize="small" color="primary" />}
-                                    sx={global.cardChip}
-                                    label={moment(item.created_At).format("LL")}
-                                  />
-                                </Box>
-                              </Stack>
-                            )}
-
-                            {/* Target Date */}
-                            <Stack sx={global.cardRow}>
-                              <Box sx={global.cardDetailBox}>
-                                <Typography sx={global.cardTitle}>TARGET DATE:</Typography>
+                                <Typography sx={global.cardTitle}>TICKETED DATE:</Typography>
                               </Box>
                               <Box sx={global.cardSpacer} />
 
@@ -1250,737 +1144,247 @@ const IssueHandlerConcerns = () => {
                                   size="30px"
                                   icon={<CalendarMonthOutlined fontSize="small" color="primary" />}
                                   sx={global.cardChip}
-                                  label={moment(item.target_Date).format("LL")}
+                                  label={moment(item.created_At).format("LL")}
                                 />
                               </Box>
                             </Stack>
+                          )}
 
-                            {/* Closed Date */}
-                            {(ticketStatus === "Closed" || ticketStatus === "") && (
-                              <Stack sx={global.cardRow}>
-                                <Box sx={global.cardDetailBox}>
-                                  <Typography sx={global.cardTitle}>CLOSED DATE:</Typography>
-                                </Box>
-                                <Box sx={global.cardSpacer} />
+                          {/* Target Date */}
+                          <Stack sx={global.cardRow}>
+                            <Box sx={global.cardDetailBox}>
+                              <Typography sx={global.cardTitle}>TARGET DATE:</Typography>
+                            </Box>
+                            <Box sx={global.cardSpacer} />
 
-                                <Box sx={global.cardDescDetailBox}>
-                                  <Chip
-                                    variant="filled"
-                                    size="30px"
-                                    icon={item?.closed_At !== null ? <CalendarMonthOutlined fontSize="small" color="primary" /> : ""}
-                                    label={item?.closed_At !== null ? moment(item?.closed_At).format("LL") : ""}
-                                    sx={global.cardChip}
-                                  />
-                                </Box>
-                              </Stack>
-                            )}
+                            <Box sx={global.cardDescDetailBox}>
+                              <Typography sx={global.cardDescription}>{item?.target_Date ? moment(item.target_Date).format("LL") : "--"}</Typography>
+                            </Box>
+                          </Stack>
 
-                            {/* Aging Days */}
-                            {ticketStatus === "Closed" && (
-                              <Stack sx={global.cardRow}>
-                                <Box sx={global.cardDetailBox}>
-                                  <Typography sx={global.cardTitle}>AGING DAYS:</Typography>
-                                </Box>
-                                <Box sx={global.cardSpacer} />
-
-                                <Box sx={global.cardDescDetailBox}>
-                                  <Typography sx={global.cardDescription}>{item.aging_Days} Day(s)</Typography>
-                                </Box>
-                              </Stack>
-                            )}
-
-                            {/* Remarks */}
+                          {/* Closed Date */}
+                          {(ticketStatus === "Closed" || ticketStatus === "") && (
                             <Stack sx={global.cardRow}>
                               <Box sx={global.cardDetailBox}>
-                                <Typography sx={global.cardTitle}>REMARKS:</Typography>
+                                <Typography sx={global.cardTitle}>CLOSED DATE:</Typography>
                               </Box>
                               <Box sx={global.cardSpacer} />
 
                               <Box sx={global.cardDescDetailBox}>
-                                <Tooltip title={item.remarks} placement="bottom-start">
-                                  <Chip
-                                    variant="filled"
-                                    size="small"
-                                    label={item.remarks ? item.remarks : "--"}
-                                    sx={{
-                                      backgroundColor: item.remarks === null ? "transparent" : item.remarks === "Ticket Closed" ? "#00913c" : theme.palette.error.main,
-                                      color: "#ffffff",
-                                      borderRadius: "none",
-                                      maxWidth: "300px",
-                                      cursor: "pointer",
-                                    }}
-                                  />
-                                </Tooltip>
+                                <Chip
+                                  variant="filled"
+                                  size="30px"
+                                  icon={item?.closed_At !== null ? <CalendarMonthOutlined fontSize="small" color="primary" /> : ""}
+                                  label={item?.closed_At !== null ? moment(item?.closed_At).format("LL") : ""}
+                                  sx={global.cardChip}
+                                />
                               </Box>
                             </Stack>
+                          )}
 
-                            {/* Status */}
-                            {ticketStatus === "" && (
-                              <Stack sx={global.cardRow}>
-                                <Box sx={global.cardDetailBox}>
-                                  <Typography sx={global.cardTitle}>STATUS:</Typography>
-                                </Box>
-                                <Box sx={global.cardSpacer} />
+                          {/* Aging Days */}
+                          {ticketStatus === "Closed" && (
+                            <Stack sx={global.cardRow}>
+                              <Box sx={global.cardDetailBox}>
+                                <Typography sx={global.cardTitle}>AGING DAYS:</Typography>
+                              </Box>
+                              <Box sx={global.cardSpacer} />
 
-                                <Box sx={global.cardDescDetailBox}>
-                                  <Chip
-                                    variant="filled"
-                                    size="small"
-                                    label={
-                                      item.ticket_Status === "Pending Request"
-                                        ? "Pending Request"
-                                        : item.ticket_Status === "Open Ticket"
-                                          ? "Open"
-                                          : item.ticket_Status === "For Transfer"
-                                            ? "For Transfer"
-                                            : item.ticket_Status === "For On-Hold"
-                                              ? "Hold Approval"
-                                              : item.ticket_Status === "On-Hold"
-                                                ? "On-Hold"
-                                                : item.ticket_Status === "For Closing Ticket"
-                                                  ? "For Closing"
-                                                  : item.ticket_Status === "For Confirmation"
-                                                    ? "For Confirmation"
-                                                    : item.ticket_Status === "Closed"
-                                                      ? "Closed"
-                                                      : ""
-                                    }
-                                    sx={{
-                                      backgroundColor:
-                                        item.ticket_Status === "Pending Request"
-                                          ? "#F58900"
-                                          : item.ticket_Status === "Open Ticket"
-                                            ? "#ec9d29"
-                                            : item.ticket_Status === "For Transfer"
-                                              ? "#ff7043"
-                                              : item.ticket_Status === "For On-Hold"
-                                                ? "#ffb74d"
-                                                : item.ticket_Status === "On-Hold"
-                                                  ? "#ff6d00"
-                                                  : item.ticket_Status === "For Closing Ticket"
-                                                    ? "#3A96FA"
-                                                    : item.ticket_Status === "For Confirmation"
-                                                      ? "#009688"
-                                                      : item.ticket_Status === "Closed"
-                                                        ? "#00913c"
-                                                        : "transparent",
-                                      color: "#ffffffde",
-                                      borderRadius: "20px",
-                                    }}
-                                  />
-                                </Box>
-                              </Stack>
-                            )}
+                              <Box sx={global.cardDescDetailBox}>
+                                <Typography sx={global.cardDescription}>{item.aging_Days} Day(s)</Typography>
+                              </Box>
+                            </Stack>
+                          )}
 
-                            {/* Closing Status */}
-                            {(ticketStatus === "Closed" || ticketStatus === "") && (
-                              <Stack sx={global.cardRow}>
-                                <Box sx={global.cardDetailBox}>
-                                  <Typography sx={global.cardTitle}>CLOSING STATUS:</Typography>
-                                </Box>
-                                <Box sx={global.cardSpacer} />
+                          {/* Remarks */}
+                          <Stack sx={global.cardRow}>
+                            <Box sx={global.cardDetailBox}>
+                              <Typography sx={global.cardTitle}>REMARKS:</Typography>
+                            </Box>
+                            <Box sx={global.cardSpacer} />
 
-                                <Box sx={global.cardDescDetailBox}>
-                                  <Chip
-                                    variant="filled"
-                                    size="small"
-                                    icon={
-                                      item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" ? (
-                                        <FiberManualRecord fontSize="small" color="success" />
-                                      ) : item?.getForClosingTickets?.[0]?.closed_Status === "Delay" ? (
-                                        <FiberManualRecord fontSize="small" color="error" />
-                                      ) : (
-                                        ""
-                                      )
-                                    }
-                                    sx={{
-                                      fontSize: "12px",
-                                      backgroundColor:
-                                        item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" || item?.getForClosingTickets?.[0]?.closed_Status === "Delay"
-                                          ? theme.palette.bgForm.black1
-                                          : "transparent",
-                                      color: theme.palette.text.main,
-                                      fontWeight: 800,
-                                    }}
-                                    label={
-                                      item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" ? (
-                                        <Typography
-                                          sx={{
-                                            color: theme.palette.success.main,
-                                            fontSize: "13px",
-                                            fontWeight: 800,
-                                          }}
-                                        >
-                                          On-Time
-                                        </Typography>
-                                      ) : item?.getForClosingTickets?.[0]?.closed_Status === "Delay" ? (
-                                        <Typography
-                                          sx={{
-                                            color: theme.palette.error.main,
-                                            fontSize: "13px",
-                                            fontWeight: 800,
-                                          }}
-                                        >
-                                          Delayed
-                                        </Typography>
-                                      ) : (
-                                        <Typography
-                                          sx={{
-                                            color: theme.palette.error.main,
-                                            fontSize: "13px",
-                                            fontWeight: 800,
-                                          }}
-                                        ></Typography>
-                                      )
-                                    }
-                                  />
-                                </Box>
-                              </Stack>
-                            )}
-
-                            {ticketStatus !== "For Approval" && (
-                              <Stack sx={global.cardRow}>
-                                <Box sx={global.cardDetailBox}>
-                                  <Typography sx={global.cardTitle}>ACTION:</Typography>
-                                </Box>
-                                <Box sx={global.cardSpacer} />
-
-                                <Box sx={global.cardDescDetailBox}>
-                                  <IssueHandlerConcernsActions
-                                    data={item}
-                                    onHoldTicket={onHoldTicketAction}
-                                    onResumeTicket={onResumeTicketAction}
-                                    onHoldManageTicket={onHoldManageTicketAction}
-                                    onCloseTicket={onCloseTicketAction}
-                                    onCancelCloseTicket={onCancelCloseAction}
-                                    onManageTicket={onManageTicketAction}
-                                    onTransferTicket={onTransferTicketAction}
-                                    onRejectTransferTicket={onRejectTransferTicketAction}
-                                    onManageTransfer={onManageTransferAction}
-                                    onApproveTransfer={onApproveTransferAction}
-                                    onCancelTransfer={onCancelTransferAction}
-                                    onPrintTicket={onPrintTicketAction}
-                                    onConfirm={onConfirmAction}
-                                    onRejectDate={onRejectDateAction}
-                                  />
-                                </Box>
-                              </Stack>
-                            )}
+                            <Box sx={global.cardDescDetailBox}>
+                              <Tooltip title={item.remarks} placement="bottom-start">
+                                <Chip
+                                  variant="filled"
+                                  size="small"
+                                  label={item.remarks ? item.remarks : "--"}
+                                  sx={{
+                                    backgroundColor: item.remarks === null ? "transparent" : item.remarks === "Ticket Closed" ? "#00913c" : theme.palette.error.main,
+                                    color: "#ffffff",
+                                    borderRadius: "none",
+                                    maxWidth: "300px",
+                                    cursor: "pointer",
+                                  }}
+                                />
+                              </Tooltip>
+                            </Box>
                           </Stack>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  ))}
 
-                {error && <SomethingWentWrong label="Something went wrong" />}
-                {loading && <CardListSkeleton count={5} sx={sx.cards} />}
-                {no_records && <NoRecordsFound label="No records found" />}
+                          {/* Status */}
+                          {ticketStatus === "" && (
+                            <Stack sx={global.cardRow}>
+                              <Box sx={global.cardDetailBox}>
+                                <Typography sx={global.cardTitle}>STATUS:</Typography>
+                              </Box>
+                              <Box sx={global.cardSpacer} />
 
-                <TablePagination
-                  sx={global.tablePagination}
-                  rowsPerPageOptions={[100, 300, 500]}
-                  component="div"
-                  count={data?.value?.totalCount || 0}
-                  rowsPerPage={data?.value?.pageSize || 100}
-                  page={data?.value?.currentPage - 1 || 0}
-                  onPageChange={onPageNumberChange}
-                  onRowsPerPageChange={onPageSizeChange}
-                />
-              </Stack>
-            </>
-          ) : (
-            // Table
-            <>
-              <TableContainer
-                sx={{
-                  overflow: "auto",
-                }}
-              >
-                <Table size="small" stickyHeader sx={{ borderBottom: "none" }}>
-                  <TableHead sx={{ whiteSpace: "nowrap" }}>
-                    <TableRow>
-                      {/* Confirmation checkbox */}
-                      {ticketStatus === "For Confirmation" && (
-                        <TableCell
-                          padding="checkbox"
-                          sx={{
-                            background: "#1C2536",
-                            color: "#D65DB1",
-                            fontWeight: 700,
-                            fontSize: "12px",
-                          }}
-                          align="center"
-                        >
-                          <Checkbox
-                            indeterminate={selectedTickets.length > 0 && selectedTickets.length < selectableTickets.length}
-                            checked={selectableTickets.length > 0 && selectedTickets.length === selectableTickets.length}
-                            onChange={handleSelectAll}
-                            inputProps={{ "aria-label": "select all tickets" }}
-                          />
-                        </TableCell>
-                      )}
+                              <Box sx={global.cardDescDetailBox}>
+                                <Chip
+                                  variant="filled"
+                                  size="small"
+                                  label={
+                                    item.ticket_Status === "Pending Request"
+                                      ? "Pending Request"
+                                      : item.ticket_Status === "Open Ticket"
+                                        ? "Open"
+                                        : item.ticket_Status === "For Transfer"
+                                          ? "For Transfer"
+                                          : item.ticket_Status === "For On-Hold"
+                                            ? "Hold Approval"
+                                            : item.ticket_Status === "On-Hold"
+                                              ? "On-Hold"
+                                              : item.ticket_Status === "For Closing Ticket"
+                                                ? "For Closing"
+                                                : item.ticket_Status === "For Confirmation"
+                                                  ? "For Confirmation"
+                                                  : item.ticket_Status === "Closed"
+                                                    ? "Closed"
+                                                    : ""
+                                  }
+                                  sx={{
+                                    backgroundColor:
+                                      item.ticket_Status === "Pending Request"
+                                        ? "#F58900"
+                                        : item.ticket_Status === "Open Ticket"
+                                          ? "#ec9d29"
+                                          : item.ticket_Status === "For Transfer"
+                                            ? "#ff7043"
+                                            : item.ticket_Status === "For On-Hold"
+                                              ? "#ffb74d"
+                                              : item.ticket_Status === "On-Hold"
+                                                ? "#ff6d00"
+                                                : item.ticket_Status === "For Closing Ticket"
+                                                  ? "#3A96FA"
+                                                  : item.ticket_Status === "For Confirmation"
+                                                    ? "#009688"
+                                                    : item.ticket_Status === "Closed"
+                                                      ? "#00913c"
+                                                      : "transparent",
+                                    color: "#ffffffde",
+                                    borderRadius: "20px",
+                                  }}
+                                />
+                              </Box>
+                            </Stack>
+                          )}
 
-                      {/* Ticket No */}
-                      <TableCell sx={sx.tableCellHeader}>
-                        <Stack sx={sx.tableHeaderWithChechBox}>
-                          <Typography sx={sx.tableCellHeader}>TICKET NO.</Typography>
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              dispatch(setAscending(!ascending));
+                          {/* Closing Status */}
+                          {(ticketStatus === "Closed" || ticketStatus === "") && (
+                            <Stack sx={global.cardRow}>
+                              <Box sx={global.cardDetailBox}>
+                                <Typography sx={global.cardTitle}>CLOSING STATUS:</Typography>
+                              </Box>
+                              <Box sx={global.cardSpacer} />
 
-                              // if
-                              // setAscendingDate(!ascendingDate);
-                            }}
-                          >
-                            {ascending ? <ArrowUpwardRounded sx={sx.sortIcon} /> : <ArrowDownwardRounded sx={sx.sortIcon} />}
-                          </IconButton>
-                        </Stack>
-                      </TableCell>
-                      {/* Requestor */}
-                      <TableCell sx={sx.tableCellHeader}>REQUESTOR</TableCell>
-                      {/* Ticket Description */}
-                      <TableCell sx={sx.tableCellHeader}>TICKET DESCRIPTION</TableCell>
-                      {/* Category */}
-                      <TableCell sx={sx.tableCellHeader}>CATEGORY</TableCell>
-                      {/* Ticketed Date */}
-                      {ticketStatus !== "For Approval" && <TableCell sx={sx.tableCellHeader}>TICKETED DATE</TableCell>}
-                      {/* Target Date */}
-                      <TableCell sx={sx.tableCellHeader}>
-                        <Stack
-                          sx={{
-                            flexDirection: "row",
-                            gap: 0.5,
-                            alignItems: "center",
-                          }}
-                        >
-                          <Typography
-                            sx={{
-                              color: "#D65DB1",
-                              fontWeight: 700,
-                              fontSize: "12px",
-                            }}
-                          >
-                            TARGET DATE
-                          </Typography>
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              setAscendingDate(!ascendingDate);
-                            }}
-                          >
-                            {ascendingDate ? <ArrowUpwardRounded sx={{ color: "#D65DB1", fontSize: "20px" }} /> : <ArrowDownwardRounded sx={{ color: "#D65DB1", fontSize: "20px" }} />}
-                          </IconButton>
-                        </Stack>
-                      </TableCell>
-                      {/* Closed Date */}
-                      {(ticketStatus === "Closed" || ticketStatus === "") && <TableCell sx={sx.tableCellHeader}>CLOSED DATE</TableCell>}
-                      {/* Aging Days */}
-                      {(ticketStatus === "Closed" || ticketStatus === "") && <TableCell sx={sx.tableCellHeader}>AGING DAYS</TableCell>}
-                      {/* Remarks */}
-                      <TableCell sx={sx.tableCellHeader}>REMARKS</TableCell>
-                      {/* Status */}
-                      {ticketStatus === "" && <TableCell sx={sx.tableCellHeader}>STATUS</TableCell>}
-                      {/* Closing Status */}
-                      {(ticketStatus === "Closed" || ticketStatus === "") && <TableCell sx={sx.tableCellHeader}>CLOSING STATUS</TableCell>}
-                      {/* Action */}
-                      {ticketStatus !== "For Approval" && (
-                        <TableCell sx={sx.tableCellHeader} align="center">
-                          ACTION
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  </TableHead>
-
-                  <TableBody>
-                    {success &&
-                      data?.value?.openTicket?.map((item) => {
-                        const isSelected = selectedTickets.includes(item.ticketConcernId);
-
-                        return (
-                          <React.Fragment key={item.ticketConcernId}>
-                            <TableRow
-                              key={item.ticketConcernId}
-                              sx={{
-                                backgroundColor: isSelected ? "#1E2034" : theme.palette.bgForm.black3,
-                                "&:hover": {
-                                  background: "",
-                                  color: "#EDF2F7",
-                                },
-                              }}
-                            >
-                              {ticketStatus === "For Confirmation" && (
-                                <TableCell padding="checkbox" sx={sx.tableCellBody} align="center">
-                                  <Checkbox
-                                    checked={selectedTickets.includes(item.requestConcernId)}
-                                    onChange={() => handleSelectTicket(item.requestConcernId)}
-                                    inputProps={{
-                                      "aria-label": `select ticket ${item.ticketConcernId}`,
-                                    }}
-                                    disabled={item?.requestor_Name !== userDetails?.fullname}
-                                  />
-                                </TableCell>
-                              )}
-
-                              <TableCell sx={sx.tableCellBody} onClick={() => onViewAction(item)}>
-                                {`${moment(item.created_At).format("YYYY")}-${item.ticketConcernId}`}
-                              </TableCell>
-
-                              <TableCell onClick={() => onViewAction(item)}>
-                                <Stack sx={{ width: "180px" }}>
-                                  <Typography sx={sx.titleTableText}>{item.requestor_Name}</Typography>
-                                  <Typography sx={sx.descTableText}>{item.department_Name}</Typography>
-                                  <Typography sx={sx.descTableText}>{item.location_Name}</Typography>
-                                </Stack>
-                              </TableCell>
-
-                              <TableCell sx={sx.customTableCellBody} onClick={() => onViewAction(item)}>
-                                {item.concern_Description
-                                  ? item.concern_Description?.split("\r\n").map((line, index) => (
-                                      <span key={index}>
-                                        {line}
-                                        <br />
-                                      </span>
-                                    ))
-                                  : "--"}
-                              </TableCell>
-
-                              <TableCell
-                                className="ellipsis-styling"
-                                sx={{
-                                  color: "#EDF2F7",
-                                  width: "500px",
-                                }}
-                                onClick={() => onViewAction(item)}
-                              >
-                                <Stack gap={0.5}>
-                                  <Stack>
-                                    <Typography sx={sx.titleAccentTableText}>Category:</Typography>
-                                    {item?.getOpenTicketCategories?.length > 0 ? (
-                                      <>
-                                        {item?.getOpenTicketCategories?.map((item, i) => (
-                                          <Typography key={i} sx={sx.descAccentTableText}>
-                                            {i + 1}. {item.category_Description}
-                                          </Typography>
-                                        ))}
-                                      </>
+                              <Box sx={global.cardDescDetailBox}>
+                                <Chip
+                                  variant="filled"
+                                  size="small"
+                                  icon={
+                                    item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" ? (
+                                      <FiberManualRecord fontSize="small" color="success" />
+                                    ) : item?.getForClosingTickets?.[0]?.closed_Status === "Delay" ? (
+                                      <FiberManualRecord fontSize="small" color="error" />
                                     ) : (
-                                      <Typography sx={sx.descAccentTableText}>--</Typography>
-                                    )}
-                                  </Stack>
-
-                                  <Stack>
-                                    <Typography sx={sx.titleAccentTableText}>Sub Category:</Typography>
-
-                                    {item?.getOpenTicketSubCategories?.length > 0 ? (
-                                      <>
-                                        {item?.getOpenTicketSubCategories?.map((item, i) => (
-                                          <Typography key={i} sx={sx.descAccentTableText}>
-                                            {i + 1}. {item.subCategory_Description}
-                                          </Typography>
-                                        ))}
-                                      </>
-                                    ) : (
-                                      <Typography sx={sx.descAccentTableText}>--</Typography>
-                                    )}
-                                  </Stack>
-                                </Stack>
-                              </TableCell>
-
-                              {ticketStatus !== "For Approval" && (
-                                <TableCell sx={sx.tableCellBody} onClick={() => onViewAction(item)}>
-                                  <>
-                                    <Chip
-                                      variant="filled"
-                                      size="small"
-                                      icon={<CalendarMonthOutlined fontSize="small" color="primary" />}
-                                      label={moment(item?.created_At).format("LL")}
-                                      sx={{
-                                        fontSize: "12px",
-                                        backgroundColor: "#1D1F3B",
-                                        color: theme.palette.primary.main,
-                                        fontWeight: 800,
-                                      }}
-                                    />
-                                  </>
-                                </TableCell>
-                              )}
-
-                              <TableCell sx={sx.tableCellBody} onClick={() => onViewAction(item)}>
-                                {item.target_Date ? (
-                                  <>
-                                    <Chip
-                                      variant="filled"
-                                      size="small"
-                                      icon={<CalendarMonthOutlined fontSize="small" color="primary" />}
-                                      sx={{
-                                        fontSize: "12px",
-                                        backgroundColor: "#1D1F3B",
-                                        color: theme.palette.primary.main,
-                                        fontWeight: 800,
-                                      }}
-                                      label={moment(item.target_Date).format("LL")}
-                                    />
-                                  </>
-                                ) : (
-                                  "--"
-                                )}
-                              </TableCell>
-
-                              {(ticketStatus === "Closed" || ticketStatus === "") && (
-                                <TableCell sx={sx.tableCellBody} onClick={() => onViewAction(item)}>
-                                  {item?.closed_At !== null ? (
-                                    <>
-                                      <Chip
-                                        variant="filled"
-                                        size="small"
-                                        icon={<CalendarMonthOutlined fontSize="small" color="primary" />}
-                                        label={moment(item?.closed_At).format("LL")}
+                                      ""
+                                    )
+                                  }
+                                  sx={{
+                                    fontSize: "12px",
+                                    backgroundColor:
+                                      item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" || item?.getForClosingTickets?.[0]?.closed_Status === "Delay"
+                                        ? theme.palette.bgForm.black1
+                                        : "transparent",
+                                    color: theme.palette.text.main,
+                                    fontWeight: 800,
+                                  }}
+                                  label={
+                                    item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" ? (
+                                      <Typography
                                         sx={{
-                                          fontSize: "12px",
-                                          backgroundColor: "#1D1F3B",
-                                          color: theme.palette.primary.main,
+                                          color: theme.palette.success.main,
+                                          fontSize: "13px",
                                           fontWeight: 800,
                                         }}
-                                      />
-                                    </>
-                                  ) : (
-                                    ""
-                                  )}
-                                </TableCell>
-                              )}
+                                      >
+                                        On-Time
+                                      </Typography>
+                                    ) : item?.getForClosingTickets?.[0]?.closed_Status === "Delay" ? (
+                                      <Typography
+                                        sx={{
+                                          color: theme.palette.error.main,
+                                          fontSize: "13px",
+                                          fontWeight: 800,
+                                        }}
+                                      >
+                                        Delayed
+                                      </Typography>
+                                    ) : (
+                                      <Typography
+                                        sx={{
+                                          color: theme.palette.error.main,
+                                          fontSize: "13px",
+                                          fontWeight: 800,
+                                        }}
+                                      ></Typography>
+                                    )
+                                  }
+                                />
+                              </Box>
+                            </Stack>
+                          )}
 
-                              {(ticketStatus === "Closed" || ticketStatus === "") && (
-                                <TableCell
-                                  sx={{
-                                    color: "#EDF2F7",
-                                    fontSize: "12px",
-                                    fontWeight: 500,
-                                    "&:hover": {
-                                      background: "",
-                                      color: "#EDF2F7",
-                                    },
-                                  }}
-                                  align="center"
-                                  onClick={() => onViewAction(item)}
-                                >
-                                  {item.aging_Days !== null ? `${item.aging_Days} day(s)` : ""}
-                                </TableCell>
-                              )}
+                          {ticketStatus !== "For Approval" && (
+                            <Stack sx={global.cardRow}>
+                              <Box sx={global.cardDetailBox}>
+                                <Typography sx={global.cardTitle}>ACTION:</Typography>
+                              </Box>
+                              <Box sx={global.cardSpacer} />
 
-                              <TableCell onClick={() => onViewAction(item)}>
-                                <Box>
-                                  <Tooltip title={item.remarks} placement="bottom-start">
-                                    <Chip
-                                      variant="filled"
-                                      size="small"
-                                      label={item.remarks ? item.remarks : ""}
-                                      sx={{
-                                        ...sx.remarksChip,
-                                        backgroundColor: item.remarks === null ? "transparent" : item.remarks === "Ticket Closed" ? "#00913c" : theme.palette.error.main,
-                                      }}
-                                    />
-                                  </Tooltip>
-                                </Box>
-                              </TableCell>
+                              <Box sx={global.cardDescDetailBox}>
+                                <IssueHandlerConcernsActions
+                                  data={item}
+                                  onHoldTicket={onHoldTicketAction}
+                                  onResumeTicket={onResumeTicketAction}
+                                  onHoldManageTicket={onHoldManageTicketAction}
+                                  onCloseTicket={onCloseTicketAction}
+                                  onCancelCloseTicket={onCancelCloseAction}
+                                  onManageTicket={onManageTicketAction}
+                                  onTransferTicket={onTransferTicketAction}
+                                  onRejectTransferTicket={onRejectTransferTicketAction}
+                                  onManageTransfer={onManageTransferAction}
+                                  onApproveTransfer={onApproveTransferAction}
+                                  onCancelTransfer={onCancelTransferAction}
+                                  onPrintTicket={onPrintTicketAction}
+                                  onConfirm={onConfirmAction}
+                                  onRejectDate={onRejectDateAction}
+                                />
+                              </Box>
+                            </Stack>
+                          )}
+                        </Stack>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                ))}
 
-                              {ticketStatus === "" && (
-                                <TableCell
-                                  sx={{
-                                    color: "#EDF2F7",
-                                    fontSize: "12px",
-                                    fontWeight: 500,
-                                    "&:hover": {
-                                      background: ticketStatus === "Closed" && item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" ? "" : "",
-                                      color: "#EDF2F7",
-                                    },
-                                  }}
-                                  onClick={() => onViewAction(item)}
-                                >
-                                  <Chip
-                                    variant="filled"
-                                    size="small"
-                                    label={
-                                      item.ticket_Status === "Pending Request"
-                                        ? "Pending Request"
-                                        : item.ticket_Status === "Open Ticket"
-                                          ? "Open"
-                                          : item.ticket_Status === "For Transfer"
-                                            ? "For Transfer"
-                                            : item.ticket_Status === "For On-Hold"
-                                              ? "Hold Approval"
-                                              : item.ticket_Status === "On-Hold"
-                                                ? "On-Hold"
-                                                : item.ticket_Status === "For Closing Ticket"
-                                                  ? "For Closing"
-                                                  : item.ticket_Status === "For Confirmation"
-                                                    ? "For Confirmation"
-                                                    : item.ticket_Status === "Closed"
-                                                      ? "Closed"
-                                                      : ""
-                                    }
-                                    sx={{
-                                      backgroundColor:
-                                        item.ticket_Status === "Pending Request"
-                                          ? "#F58900"
-                                          : item.ticket_Status === "Open Ticket"
-                                            ? "#ec9d29"
-                                            : item.ticket_Status === "For Transfer"
-                                              ? "#ff7043"
-                                              : item.ticket_Status === "For On-Hold"
-                                                ? "#ffb74d"
-                                                : item.ticket_Status === "On-Hold"
-                                                  ? "#ff6d00"
-                                                  : item.ticket_Status === "For Closing Ticket"
-                                                    ? "#3A96FA"
-                                                    : item.ticket_Status === "For Confirmation"
-                                                      ? "#009688"
-                                                      : item.ticket_Status === "Closed"
-                                                        ? "#00913c"
-                                                        : "transparent",
-                                      color: "#ffffffde",
-                                      borderRadius: "20px",
-                                    }}
-                                  />
-                                </TableCell>
-                              )}
-
-                              {(ticketStatus === "Closed" || ticketStatus === "") && (
-                                <TableCell
-                                  sx={{
-                                    color: "#EDF2F7",
-                                    fontWeight: 500,
-                                  }}
-                                >
-                                  <Chip
-                                    variant="filled"
-                                    size="small"
-                                    icon={
-                                      item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" ? (
-                                        <FiberManualRecord fontSize="small" color="success" />
-                                      ) : item?.getForClosingTickets?.[0]?.closed_Status === "Delay" ? (
-                                        <FiberManualRecord fontSize="small" color="error" />
-                                      ) : (
-                                        ""
-                                      )
-                                    }
-                                    sx={{
-                                      fontSize: "12px",
-                                      backgroundColor:
-                                        item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" || item?.getForClosingTickets?.[0]?.closed_Status === "Delay"
-                                          ? theme.palette.bgForm.black1
-                                          : "transparent",
-                                      color: theme.palette.text.main,
-                                      fontWeight: 800,
-                                    }}
-                                    label={
-                                      item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" ? (
-                                        <Typography
-                                          sx={{
-                                            color: theme.palette.success.main,
-                                            fontSize: "13px",
-                                            fontWeight: 800,
-                                          }}
-                                        >
-                                          On-Time
-                                        </Typography>
-                                      ) : item?.getForClosingTickets?.[0]?.closed_Status === "Delay" ? (
-                                        <Typography
-                                          sx={{
-                                            color: theme.palette.error.main,
-                                            fontSize: "13px",
-                                            fontWeight: 800,
-                                          }}
-                                        >
-                                          Delayed
-                                        </Typography>
-                                      ) : (
-                                        <Typography
-                                          sx={{
-                                            color: theme.palette.error.main,
-                                            fontSize: "13px",
-                                            fontWeight: 800,
-                                          }}
-                                        ></Typography>
-                                      )
-                                    }
-                                  />
-                                </TableCell>
-                              )}
-
-                              {ticketStatus !== "For Approval" && (
-                                <TableCell sx={sx.tableCellBody}>
-                                  <IssueHandlerConcernsActions
-                                    data={item}
-                                    onHoldTicket={onHoldTicketAction}
-                                    onResumeTicket={onResumeTicketAction}
-                                    onHoldManageTicket={onHoldManageTicketAction}
-                                    onCloseTicket={onCloseTicketAction}
-                                    onCancelCloseTicket={onCancelCloseAction}
-                                    onManageTicket={onManageTicketAction}
-                                    onTransferTicket={onTransferTicketAction}
-                                    onRejectTransferTicket={onRejectTransferTicketAction}
-                                    onManageTransfer={onManageTransferAction}
-                                    onApproveTransfer={onApproveTransferAction}
-                                    onCancelTransfer={onCancelTransferAction}
-                                    onPrintTicket={onPrintTicketAction}
-                                    onConfirm={onConfirmAction}
-                                    onRejectDate={onRejectDateAction}
-                                  />
-                                </TableCell>
-                              )}
-                            </TableRow>
-                          </React.Fragment>
-                        );
-                      })}
-
-                    {loading && <TableSkeleton columns={tableColumns} rows={10} cellSx={sx.tableCellBody} />}
-                    {no_records && <NoRecordsFoundTable colSpan={12} label="No records found" />}
-                    {isError && <SomethingWentWrongTable colSpan={12} label="Something went wrong." />}
-
-                    {/* {isError && (
-                      <TableRow>
-                        <TableCell colSpan={12} align="center">
-                          <img src={somethingWentWrong} alt="Something Went Wrong" className="something-went-wrong-table" />
-                          <Typography variant="h5" color="#EDF2F7" marginLeft={2}>
-                            Something went wrong.
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )}
-
-                    {(isLoading || isFetching) && (
-                      <TableRow>
-                        <TableCell colSpan={12} align="center">
-                          <CircularProgress />
-                          <Typography variant="h5" color="#EDF2F7">
-                            Please wait...
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )}
-
-                    {isSuccess && !data?.value?.openTicket.length && !isLoading && !isFetching && (
-                      <TableRow>
-                        <TableCell colSpan={12} align="center">
-                          <img src={noRecordsFound} alt="No Records Found" className="norecords-found-table" />
-                          <Typography variant="h5" color="#EDF2F7" marginLeft={2}>
-                            No records found.
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )} */}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              {error && <SomethingWentWrong label="Something went wrong" />}
+              {loading && <CardListSkeleton count={5} sx={sx.cards} />}
+              {no_records && <NoRecordsFound label="No records found" />}
 
               <TablePagination
-                sx={{
-                  color: "#A0AEC0",
-                  fontWeight: 400,
-                  background: "#1C2536",
-                  borderRadius: "0px 0px 20px 20px",
-                }}
+                sx={global.tablePagination}
                 rowsPerPageOptions={[100, 300, 500]}
                 component="div"
                 count={data?.value?.totalCount || 0}
@@ -1989,109 +1393,578 @@ const IssueHandlerConcerns = () => {
                 onPageChange={onPageNumberChange}
                 onRowsPerPageChange={onPageSizeChange}
               />
-            </>
-          )}
-        </Stack>
+            </Stack>
+          </>
+        ) : (
+          // Table
+          <>
+            <TableContainer
+              sx={{
+                overflow: "auto",
+              }}
+            >
+              <Table size="small" stickyHeader sx={{ borderBottom: "none" }}>
+                <TableHead sx={{ whiteSpace: "nowrap" }}>
+                  <TableRow>
+                    {/* Confirmation checkbox */}
+                    {ticketStatus === "For Confirmation" && (
+                      <TableCell
+                        padding="checkbox"
+                        sx={{
+                          background: "#1C2536",
+                          color: "#D65DB1",
+                          fontWeight: 700,
+                          fontSize: "12px",
+                        }}
+                        align="center"
+                      >
+                        <Checkbox
+                          indeterminate={selectedTickets.length > 0 && selectedTickets.length < selectableTickets.length}
+                          checked={selectableTickets.length > 0 && selectedTickets.length === selectableTickets.length}
+                          onChange={handleSelectAll}
+                          inputProps={{ "aria-label": "select all tickets" }}
+                        />
+                      </TableCell>
+                    )}
 
-        {viewOpen && (
-          <IssueViewDialog
-            data={viewData}
-            setData={setViewData}
-            ticketStatus={ticketStatus}
-            viewOpen={viewOpen}
-            viewOnClose={viewOnClose}
-            // Buttons in View Dialog ~~~~
-            onClosing={onCloseTicketAction}
-            onTransfer={onTransferTicketAction}
-            onHold={onHoldTicketAction}
-          />
-        )}
+                    {/* Ticket No */}
+                    <TableCell sx={sx.tableCellHeader}>
+                      <Stack sx={sx.tableHeaderWithChechBox}>
+                        <Typography sx={sx.tableCellHeader}>TICKET NO.</Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            dispatch(setAscending(!ascending));
 
-        {addTicketOpen && <AddTicketDialog open={addTicketOpen} onClose={addTicketOnClose} />}
-        <IssueHandlerClosingDialog data={closeTicketData} open={closeTicketOpen} onClose={onDialogClose} viewOnClose={viewOnClose} />
+                            // if
+                            // setAscendingDate(!ascendingDate);
+                          }}
+                        >
+                          {ascending ? <ArrowUpwardRounded sx={sx.sortIcon} /> : <ArrowDownwardRounded sx={sx.sortIcon} />}
+                        </IconButton>
+                      </Stack>
+                    </TableCell>
+                    {/* Requestor */}
+                    <TableCell sx={sx.tableCellHeader}>REQUESTOR</TableCell>
+                    {/* Ticket Description */}
+                    <TableCell sx={sx.tableCellHeader}>TICKET DESCRIPTION</TableCell>
+                    {/* Category */}
+                    <TableCell sx={sx.tableCellHeader}>CATEGORY</TableCell>
+                    {/* Ticketed Date */}
+                    {ticketStatus !== "For Approval" && <TableCell sx={sx.tableCellHeader}>TICKETED DATE</TableCell>}
+                    {/* Target Date */}
+                    <TableCell sx={sx.tableCellHeader}>
+                      <Stack
+                        sx={{
+                          flexDirection: "row",
+                          gap: 0.5,
+                          alignItems: "center",
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            color: "#D65DB1",
+                            fontWeight: 700,
+                            fontSize: "12px",
+                          }}
+                        >
+                          TARGET DATE
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setAscendingDate(!ascendingDate);
+                          }}
+                        >
+                          {ascendingDate ? <ArrowUpwardRounded sx={{ color: "#D65DB1", fontSize: "20px" }} /> : <ArrowDownwardRounded sx={{ color: "#D65DB1", fontSize: "20px" }} />}
+                        </IconButton>
+                      </Stack>
+                    </TableCell>
+                    {/* Closed Date */}
+                    {(ticketStatus === "Closed" || ticketStatus === "") && <TableCell sx={sx.tableCellHeader}>CLOSED DATE</TableCell>}
+                    {/* Aging Days */}
+                    {(ticketStatus === "Closed" || ticketStatus === "") && <TableCell sx={sx.tableCellHeader}>AGING DAYS</TableCell>}
+                    {/* Remarks */}
+                    <TableCell sx={sx.tableCellHeader}>REMARKS</TableCell>
+                    {/* Status */}
+                    {ticketStatus === "" && <TableCell sx={sx.tableCellHeader}>STATUS</TableCell>}
+                    {/* Closing Status */}
+                    {(ticketStatus === "Closed" || ticketStatus === "") && <TableCell sx={sx.tableCellHeader}>CLOSING STATUS</TableCell>}
+                    {/* Action */}
+                    {ticketStatus !== "For Approval" && (
+                      <TableCell sx={sx.tableCellHeader} align="center">
+                        ACTION
+                      </TableCell>
+                    )}
+                  </TableRow>
+                </TableHead>
 
-        <RejectDateDialog
-          data={rejectDateData}
-          open={rejectDateOpen}
-          onClose={() => {
-            rejectDateOnClose(setRejectDateData(null));
-          }}
-          refetch={refetch}
-        />
+                <TableBody>
+                  {success &&
+                    rows?.map((item) => {
+                      const isSelected = selectedTickets.includes(item.ticketConcernId);
 
-        <ManageTicketDialog
-          data={closeTicketData}
-          open={manageTicketOpen}
-          onClose={() => {
-            manageTicketOnClose(setCloseTicketData(null));
-          }}
-          refetch={refetch}
-        />
+                      return (
+                        <React.Fragment key={item.ticketConcernId}>
+                          <TableRow
+                            key={item.ticketConcernId}
+                            sx={{
+                              backgroundColor: isSelected ? "#1E2034" : theme.palette.bgForm.black3,
+                              "&:hover": {
+                                background: "",
+                                color: "#EDF2F7",
+                              },
+                            }}
+                          >
+                            {ticketStatus === "For Confirmation" && (
+                              <TableCell padding="checkbox" sx={sx.tableCellBody} align="center">
+                                <Checkbox
+                                  checked={selectedTickets.includes(item.requestConcernId)}
+                                  onChange={() => handleSelectTicket(item.requestConcernId)}
+                                  inputProps={{
+                                    "aria-label": `select ticket ${item.ticketConcernId}`,
+                                  }}
+                                  disabled={item?.requestor_Name !== userDetails?.fullname}
+                                />
+                              </TableCell>
+                            )}
 
-        {transferTicketOpen && (
-          <TicketForTransferDialog
-            data={transferTicketData}
-            open={transferTicketOpen}
-            onClose={() => {
-              transferTicketOnClose(setTransferTicketData(null));
-            }}
-            viewOnClose={viewOnClose}
-          />
-        )}
+                            <TableCell sx={sx.tableCellBody} onClick={() => onViewAction(item)}>
+                              {`${moment(item.created_At).format("YYYY")}-${item.ticketConcernId}`}
+                            </TableCell>
 
-        <ManageTransferDialog
-          data={transferTicketData}
-          open={manageTransferOpen}
-          onClose={() => {
-            manageTransferOnClose(setTransferTicketData(null));
-          }}
-          refetch={refetch}
-        />
+                            <TableCell onClick={() => onViewAction(item)}>
+                              <Stack sx={{ width: "180px" }}>
+                                <Typography sx={sx.titleTableText}>{item.requestor_Name}</Typography>
+                                <Typography sx={sx.descTableText}>{item.department_Name}</Typography>
+                                <Typography sx={sx.descTableText}>{item.location_Name}</Typography>
+                              </Stack>
+                            </TableCell>
 
-        {approveTransferOpen && (
-          <ApproveTransferTicket
-            data={transferTicketData}
-            open={approveTransferOpen}
-            onClose={() => {
-              approveTransferOnClose(setTransferTicketData(null));
-            }}
-          />
-        )}
+                            <TableCell sx={sx.customTableCellBody} onClick={() => onViewAction(item)}>
+                              {item.concern_Description
+                                ? item.concern_Description?.split("\r\n").map((line, index) => (
+                                    <span key={index}>
+                                      {line}
+                                      <br />
+                                    </span>
+                                  ))
+                                : "--"}
+                            </TableCell>
 
-        {rejectTransferOpen && <RejectTransfer data={transferTicketData} open={rejectTransferOpen} onClose={rejectTransferOnClose} />}
+                            <TableCell
+                              className="ellipsis-styling"
+                              sx={{
+                                color: "#EDF2F7",
+                                width: "500px",
+                              }}
+                              onClick={() => onViewAction(item)}
+                            >
+                              <Stack gap={0.5}>
+                                <Stack>
+                                  <Typography sx={sx.titleAccentTableText}>Category:</Typography>
+                                  {item?.getOpenTicketCategories?.length > 0 ? (
+                                    <>
+                                      {item?.getOpenTicketCategories?.map((item, i) => (
+                                        <Typography key={i} sx={sx.descAccentTableText}>
+                                          {i + 1}. {item.category_Description}
+                                        </Typography>
+                                      ))}
+                                    </>
+                                  ) : (
+                                    <Typography sx={sx.descAccentTableText}>--</Typography>
+                                  )}
+                                </Stack>
 
-        {holdTicketOpen && (
-          <IssueHandlerHoldDialog
-            data={holdTicketData}
-            open={holdTicketOpen}
-            onClose={() => {
-              holdTicketOnClose(setHoldTicketData(null));
-            }}
-            viewOnClose={viewOnClose}
-          />
-        )}
+                                <Stack>
+                                  <Typography sx={sx.titleAccentTableText}>Sub Category:</Typography>
 
-        {manageHoldTicketOpen && (
-          <ManageOnHoldTicketDialog
-            data={holdTicketData}
-            open={manageHoldTicketOpen}
-            onClose={() => {
-              manageHoldTicketOnClose(setHoldTicketData(null));
-            }}
-            refetch={refetch}
-          />
-        )}
+                                  {item?.getOpenTicketSubCategories?.length > 0 ? (
+                                    <>
+                                      {item?.getOpenTicketSubCategories?.map((item, i) => (
+                                        <Typography key={i} sx={sx.descAccentTableText}>
+                                          {i + 1}. {item.subCategory_Description}
+                                        </Typography>
+                                      ))}
+                                    </>
+                                  ) : (
+                                    <Typography sx={sx.descAccentTableText}>--</Typography>
+                                  )}
+                                </Stack>
+                              </Stack>
+                            </TableCell>
 
-        {printTicketOpen && (
-          <PrintServiceReport
-            data={printData}
-            open={printTicketOpen}
-            onClose={() => {
-              printTicketOnClose(setPrintData(null));
-            }}
-          />
+                            {ticketStatus !== "For Approval" && (
+                              <TableCell sx={sx.tableCellBody} onClick={() => onViewAction(item)}>
+                                <>
+                                  <Chip
+                                    variant="filled"
+                                    size="small"
+                                    icon={<CalendarMonthOutlined fontSize="small" color="primary" />}
+                                    label={moment(item?.created_At).format("LL")}
+                                    sx={{
+                                      fontSize: "12px",
+                                      backgroundColor: "#1D1F3B",
+                                      color: theme.palette.primary.main,
+                                      fontWeight: 800,
+                                    }}
+                                  />
+                                </>
+                              </TableCell>
+                            )}
+
+                            <TableCell sx={sx.tableCellBody} onClick={() => onViewAction(item)}>
+                              {item.target_Date ? (
+                                <>
+                                  <Chip
+                                    variant="filled"
+                                    size="small"
+                                    icon={<CalendarMonthOutlined fontSize="small" color="primary" />}
+                                    sx={{
+                                      fontSize: "12px",
+                                      backgroundColor: "#1D1F3B",
+                                      color: theme.palette.primary.main,
+                                      fontWeight: 800,
+                                    }}
+                                    label={moment(item.target_Date).format("LL")}
+                                  />
+                                </>
+                              ) : (
+                                "--"
+                              )}
+                            </TableCell>
+
+                            {(ticketStatus === "Closed" || ticketStatus === "") && (
+                              <TableCell sx={sx.tableCellBody} onClick={() => onViewAction(item)}>
+                                {item?.closed_At !== null ? (
+                                  <>
+                                    <Chip
+                                      variant="filled"
+                                      size="small"
+                                      icon={<CalendarMonthOutlined fontSize="small" color="primary" />}
+                                      label={moment(item?.closed_At).format("LL")}
+                                      sx={{
+                                        fontSize: "12px",
+                                        backgroundColor: "#1D1F3B",
+                                        color: theme.palette.primary.main,
+                                        fontWeight: 800,
+                                      }}
+                                    />
+                                  </>
+                                ) : (
+                                  ""
+                                )}
+                              </TableCell>
+                            )}
+
+                            {(ticketStatus === "Closed" || ticketStatus === "") && (
+                              <TableCell
+                                sx={{
+                                  color: "#EDF2F7",
+                                  fontSize: "12px",
+                                  fontWeight: 500,
+                                  "&:hover": {
+                                    background: "",
+                                    color: "#EDF2F7",
+                                  },
+                                }}
+                                align="center"
+                                onClick={() => onViewAction(item)}
+                              >
+                                {item.aging_Days !== null ? `${item.aging_Days} day(s)` : ""}
+                              </TableCell>
+                            )}
+
+                            <TableCell onClick={() => onViewAction(item)}>
+                              <Box>
+                                <Tooltip title={item.remarks} placement="bottom-start">
+                                  <Chip
+                                    variant="filled"
+                                    size="small"
+                                    label={item.remarks ? item.remarks : ""}
+                                    sx={{
+                                      ...sx.remarksChip,
+                                      backgroundColor: item.remarks === null ? "transparent" : item.remarks === "Ticket Closed" ? "#00913c" : theme.palette.error.main,
+                                    }}
+                                  />
+                                </Tooltip>
+                              </Box>
+                            </TableCell>
+
+                            {ticketStatus === "" && (
+                              <TableCell
+                                sx={{
+                                  color: "#EDF2F7",
+                                  fontSize: "12px",
+                                  fontWeight: 500,
+                                  "&:hover": {
+                                    background: ticketStatus === "Closed" && item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" ? "" : "",
+                                    color: "#EDF2F7",
+                                  },
+                                }}
+                                onClick={() => onViewAction(item)}
+                              >
+                                <Chip
+                                  variant="filled"
+                                  size="small"
+                                  label={
+                                    item.ticket_Status === "Pending Request"
+                                      ? "Pending Request"
+                                      : item.ticket_Status === "Open Ticket"
+                                        ? "Open"
+                                        : item.ticket_Status === "For Transfer"
+                                          ? "For Transfer"
+                                          : item.ticket_Status === "For On-Hold"
+                                            ? "Hold Approval"
+                                            : item.ticket_Status === "On-Hold"
+                                              ? "On-Hold"
+                                              : item.ticket_Status === "For Closing Ticket"
+                                                ? "For Closing"
+                                                : item.ticket_Status === "For Confirmation"
+                                                  ? "For Confirmation"
+                                                  : item.ticket_Status === "Closed"
+                                                    ? "Closed"
+                                                    : ""
+                                  }
+                                  sx={{
+                                    backgroundColor:
+                                      item.ticket_Status === "Pending Request"
+                                        ? "#F58900"
+                                        : item.ticket_Status === "Open Ticket"
+                                          ? "#ec9d29"
+                                          : item.ticket_Status === "For Transfer"
+                                            ? "#ff7043"
+                                            : item.ticket_Status === "For On-Hold"
+                                              ? "#ffb74d"
+                                              : item.ticket_Status === "On-Hold"
+                                                ? "#ff6d00"
+                                                : item.ticket_Status === "For Closing Ticket"
+                                                  ? "#3A96FA"
+                                                  : item.ticket_Status === "For Confirmation"
+                                                    ? "#009688"
+                                                    : item.ticket_Status === "Closed"
+                                                      ? "#00913c"
+                                                      : "transparent",
+                                    color: "#ffffffde",
+                                    borderRadius: "20px",
+                                  }}
+                                />
+                              </TableCell>
+                            )}
+
+                            {(ticketStatus === "Closed" || ticketStatus === "") && (
+                              <TableCell
+                                sx={{
+                                  color: "#EDF2F7",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                <Chip
+                                  variant="filled"
+                                  size="small"
+                                  icon={
+                                    item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" ? (
+                                      <FiberManualRecord fontSize="small" color="success" />
+                                    ) : item?.getForClosingTickets?.[0]?.closed_Status === "Delay" ? (
+                                      <FiberManualRecord fontSize="small" color="error" />
+                                    ) : (
+                                      ""
+                                    )
+                                  }
+                                  sx={{
+                                    fontSize: "12px",
+                                    backgroundColor:
+                                      item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" || item?.getForClosingTickets?.[0]?.closed_Status === "Delay"
+                                        ? theme.palette.bgForm.black1
+                                        : "transparent",
+                                    color: theme.palette.text.main,
+                                    fontWeight: 800,
+                                  }}
+                                  label={
+                                    item?.getForClosingTickets?.[0]?.closed_Status === "On-Time" ? (
+                                      <Typography
+                                        sx={{
+                                          color: theme.palette.success.main,
+                                          fontSize: "13px",
+                                          fontWeight: 800,
+                                        }}
+                                      >
+                                        On-Time
+                                      </Typography>
+                                    ) : item?.getForClosingTickets?.[0]?.closed_Status === "Delay" ? (
+                                      <Typography
+                                        sx={{
+                                          color: theme.palette.error.main,
+                                          fontSize: "13px",
+                                          fontWeight: 800,
+                                        }}
+                                      >
+                                        Delayed
+                                      </Typography>
+                                    ) : (
+                                      <Typography
+                                        sx={{
+                                          color: theme.palette.error.main,
+                                          fontSize: "13px",
+                                          fontWeight: 800,
+                                        }}
+                                      ></Typography>
+                                    )
+                                  }
+                                />
+                              </TableCell>
+                            )}
+
+                            {ticketStatus !== "For Approval" && (
+                              <TableCell sx={sx.tableCellBody}>
+                                <IssueHandlerConcernsActions
+                                  data={item}
+                                  onHoldTicket={onHoldTicketAction}
+                                  onResumeTicket={onResumeTicketAction}
+                                  onHoldManageTicket={onHoldManageTicketAction}
+                                  onCloseTicket={onCloseTicketAction}
+                                  onCancelCloseTicket={onCancelCloseAction}
+                                  onManageTicket={onManageTicketAction}
+                                  onTransferTicket={onTransferTicketAction}
+                                  onRejectTransferTicket={onRejectTransferTicketAction}
+                                  onManageTransfer={onManageTransferAction}
+                                  onApproveTransfer={onApproveTransferAction}
+                                  onCancelTransfer={onCancelTransferAction}
+                                  onPrintTicket={onPrintTicketAction}
+                                  onConfirm={onConfirmAction}
+                                  onRejectDate={onRejectDateAction}
+                                />
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        </React.Fragment>
+                      );
+                    })}
+
+                  {loading && <TableSkeleton columns={tableColumns} rows={10} cellSx={sx.tableCellBody} />}
+                  {no_records && <NoRecordsFoundTable colSpan={12} label="No records found" />}
+                  {isError && <SomethingWentWrongTable colSpan={12} label="Something went wrong." />}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <TablePagination
+              sx={{
+                color: "#A0AEC0",
+                fontWeight: 400,
+                background: "#1C2536",
+                borderRadius: "0px 0px 20px 20px",
+              }}
+              rowsPerPageOptions={[100, 300, 500]}
+              component="div"
+              count={data?.value?.totalCount || 0}
+              rowsPerPage={data?.value?.pageSize || 100}
+              page={data?.value?.currentPage - 1 || 0}
+              onPageChange={onPageNumberChange}
+              onRowsPerPageChange={onPageSizeChange}
+            />
+          </>
         )}
       </Stack>
+
+      {viewOpen && (
+        <IssueViewDialog
+          data={viewData}
+          setData={setViewData}
+          ticketStatus={ticketStatus}
+          viewOpen={viewOpen}
+          viewOnClose={viewOnClose}
+          // Buttons in View Dialog ~~~~
+          onClosing={onCloseTicketAction}
+          onTransfer={onTransferTicketAction}
+          onHold={onHoldTicketAction}
+        />
+      )}
+
+      {addTicketOpen && <AddTicketDialog open={addTicketOpen} onClose={addTicketOnClose} />}
+      <IssueHandlerClosingDialog data={closeTicketData} open={closeTicketOpen} onClose={onDialogClose} viewOnClose={viewOnClose} />
+
+      <RejectDateDialog
+        data={rejectDateData}
+        open={rejectDateOpen}
+        onClose={() => {
+          rejectDateOnClose(setRejectDateData(null));
+        }}
+        refetch={refetch}
+      />
+
+      <ManageTicketDialog
+        data={closeTicketData}
+        open={manageTicketOpen}
+        onClose={() => {
+          manageTicketOnClose(setCloseTicketData(null));
+        }}
+        refetch={refetch}
+      />
+
+      {transferTicketOpen && (
+        <TicketForTransferDialog
+          data={transferTicketData}
+          open={transferTicketOpen}
+          onClose={() => {
+            transferTicketOnClose(setTransferTicketData(null));
+          }}
+          viewOnClose={viewOnClose}
+        />
+      )}
+
+      <ManageTransferDialog
+        data={transferTicketData}
+        open={manageTransferOpen}
+        onClose={() => {
+          manageTransferOnClose(setTransferTicketData(null));
+        }}
+        refetch={refetch}
+      />
+
+      {approveTransferOpen && (
+        <ApproveTransferTicket
+          data={transferTicketData}
+          open={approveTransferOpen}
+          onClose={() => {
+            approveTransferOnClose(setTransferTicketData(null));
+          }}
+        />
+      )}
+
+      {rejectTransferOpen && <RejectTransfer data={transferTicketData} open={rejectTransferOpen} onClose={rejectTransferOnClose} />}
+
+      {holdTicketOpen && (
+        <IssueHandlerHoldDialog
+          data={holdTicketData}
+          open={holdTicketOpen}
+          onClose={() => {
+            holdTicketOnClose(setHoldTicketData(null));
+          }}
+          viewOnClose={viewOnClose}
+        />
+      )}
+
+      {manageHoldTicketOpen && (
+        <ManageOnHoldTicketDialog
+          data={holdTicketData}
+          open={manageHoldTicketOpen}
+          onClose={() => {
+            manageHoldTicketOnClose(setHoldTicketData(null));
+          }}
+          refetch={refetch}
+        />
+      )}
+
+      {printTicketOpen && (
+        <PrintServiceReport
+          data={printData}
+          open={printTicketOpen}
+          onClose={() => {
+            printTicketOnClose(setPrintData(null));
+          }}
+        />
+      )}
     </Stack>
   );
 };

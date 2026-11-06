@@ -240,6 +240,9 @@ export const masterlistStyles = {
     color: theme.palette.text.main,
   },
 
+  // User Account Cards
+  
+
   // Shared feedback (loading / empty / error) block
   feedbackContainer: {
     padding: 4,

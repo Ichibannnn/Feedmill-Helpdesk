@@ -288,19 +288,19 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
         category_Description: item.category_Description,
       }));
 
-      const subCategory = data?.getOpenTicketSubCategories.map((item) => ({
-        ticketSubCategoryId: item.ticketSubCategoryId,
-        subCategoryId: item.subCategoryId,
-        sub_Category_Description: item.subCategory_Description,
-      }));
+      // const subCategory = data?.getOpenTicketSubCategories.map((item) => ({
+      //   ticketSubCategoryId: item.ticketSubCategoryId,
+      //   subCategoryId: item.subCategoryId,
+      //   sub_Category_Description: item.subCategory_Description,
+      // }));
 
       setValue("CategoryId", null);
-      setValue("SubCategoryId", null);
+      // setValue("SubCategoryId", null);
 
       const categoryIdParams = data?.getOpenTicketCategories?.map((item) => item?.categoryId);
 
       setValue("CategoryId", category);
-      setValue("SubCategoryId", subCategory);
+      // setValue("SubCategoryId", subCategory);
       getSubCategory({
         CategoryId: categoryIdParams,
       });
@@ -494,7 +494,7 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
                     </Stack>
 
                     {/* Sub Category */}
-                    <Stack sx={sx.fieldTwoColsStack}>
+                    {/* <Stack sx={sx.fieldTwoColsStack}>
                       <Stack sx={sx.fieldTitleWithIconBox}>
                         <Typography sx={sx.fieldText}>Sub Category:</Typography>
                         <FiberManualRecord sx={sx.requiredDot} />
@@ -525,7 +525,7 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
                           );
                         }}
                       />
-                    </Stack>
+                    </Stack> */}
                   </Stack>
 
                   {/* Concern Category */}

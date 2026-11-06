@@ -36,7 +36,7 @@ import { sidebarStyles as sx } from "./styles/sidebarStyles";
 const OVERLAY_BREAKPOINT = 1281;
 const MOBILE_BREAKPOINT = 640;
 const RAIL_COLLAPSE_BREAKPOINT = 1639;
-const MOBILE_QUICK_ITEM_NAMES = ["Overview", "Ticketing", "Checklist Management", "Reports"];
+const MOBILE_QUICK_ITEM_NAMES = ["Overview", "Ticketing", "Reports"];
 const MOBILE_MENU_ITEMS = [
   { id: 1, name: "Overview", path: "/overview", icon: "EqualizerOutlined" },
   {

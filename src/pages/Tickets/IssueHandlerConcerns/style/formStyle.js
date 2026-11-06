@@ -127,7 +127,23 @@ export const formStyle = {
     width: "72%",
   },
 
-  dialogTitle: {},
+  // Concern Approval
+  dialogTitle: {
+    display: "flex",
+    justifyContent: "left",
+    gap: 1,
+    paddingTop: 3,
+    paddingLeft: 3,
+    fontSize: "16px",
+    fontWeight: 700,
+    color: theme.palette.success.main,
+  },
+  dialogSubtitle: {
+    fontSize: "13.5px",
+    color: theme.palette.text.secondary,
+    paddingLeft: 3,
+    marginBottom: "4px",
+  },
 
   detailBox: {
     background: t.panel,

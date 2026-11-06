@@ -46,6 +46,7 @@ import Redirect from "../pages/Redirect";
 import Pms from "../pages/PMS/Pms";
 import ChecklistManagementPage from "../pages/ChecklistManagement/ChecklistManagementPage";
 import UserType from "../pages/Masterlist/UserTypes/UserType";
+import ConcernApproval from "../pages/Approver/ConcernApproval/ConcernApproval";
 
 export const router = createBrowserRouter([
   {
@@ -180,6 +181,10 @@ export const router = createBrowserRouter([
         path: "/approver",
         element: <ApproverPage />,
         children: [
+          // {
+          //   path: "/approver/concern-approval",
+          //   element: <ConcernApproval />,
+          // },
           {
             path: "/approver/approval",
             element: <Approval />,

@@ -488,4 +488,89 @@ export const ticketStyle = {
     fontWeight: 600,
     fontWeight: 600,
   },
+
+  // Issue Handler Page
+  mainContainer: {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    backgroundColor: theme.palette.bgForm.black1,
+    color: "#fff",
+    padding: { xs: "20px", md: "2px 64px 24px 64px" },
+  },
+
+  pageHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  selectionContainer: {
+    flexDirection: { xs: "column", md: "row" },
+    alignItems: { xs: "left", md: "center" },
+    justifyContent: "space-between",
+    padding: "10px 20px",
+    backgroundColor: theme.palette.bgForm.black2,
+    borderRadius: "20px",
+    gap: 0.5,
+    mt: 0.5,
+    mb: 0.5,
+  },
+
+  contentContainer: {
+    backgroundColor: theme.palette.bgForm.black3,
+    borderRadius: "20px",
+    marginTop: "5px",
+    width: "100%",
+  },
+
+  tabsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingLeft: 1,
+    paddingRight: 1,
+  },
+
+  tabs: {
+    ".MuiTab-root": {
+      minWidth: { sm: "80px", md: "120px" },
+      fontSize: { xs: "10px", sm: "12px", md: "13px" },
+    },
+    ".MuiTabs-scrollButtons": {
+      color: "#fff",
+      "&.Mui-disabled": {
+        opacity: 0.3,
+      },
+    },
+  },
+
+  tab: {
+    fontSize: "12px",
+    fontWeight: 600,
+    ".MuiBadge-badge": {
+      color: "#ffff",
+    },
+  },
+
+  divider: {
+    background: "#2D3748",
+    marginBottom: 1,
+    lineHeight: 1,
+  },
+
+  searchContainer: {
+    width: "100%",
+    padding: 1,
+  },
+
+  searchIcon: {
+    marginRight: 0.5,
+    color: "#A0AEC0",
+  },
+
+  search: {
+    borderRadius: "15px",
+    fontSize: "small",
+    fontWeight: 400,
+    lineHeight: "1.4375rem",
+  },
 };
