@@ -41,82 +41,80 @@ const IssueHandlerConcernsActions = ({
   const ref = useRef(null);
   const userDetails = useSelector((state) => state?.user);
 
-  const { open, onToggle } = useDisclosure();
+  const { open, onToggle, onClose } = useDisclosure();
 
   const onHoldTicketAction = (data) => {
-    onToggle();
+    onClose();
     onHoldTicket(data);
   };
 
   const onHoldManageTicketAction = (data) => {
-    onToggle();
+    onClose();
     onHoldManageTicket(data);
   };
 
   const onResumeTicketAction = (data) => {
-    onToggle();
+    onClose();
     onResumeTicket(data);
   };
 
   const onCloseTicketAction = (data) => {
-    onToggle();
+    onClose();
     onCloseTicket(data);
   };
 
   const onCancelCloseTicketAction = (data) => {
-    onToggle();
+    onClose();
     onCancelCloseTicket(data);
   };
 
   const onManageTicketAction = (data) => {
-    onToggle();
+    onClose();
     onManageTicket(data);
   };
 
   const onTransferTicketAction = (data) => {
-    onToggle();
+    onClose();
     onTransferTicket(data);
   };
 
   const onManageTransferAction = (data) => {
-    onToggle();
+    onClose();
     onManageTransfer(data);
   };
 
   const onApproveTransferAction = (data) => {
-    onToggle();
+    onClose();
     onApproveTransfer(data);
   };
 
   const onCancelTransferAction = (data) => {
-    onToggle();
+    onClose();
     onCancelTransfer(data);
   };
 
   const onRejectTransferAction = (data) => {
-    onToggle();
+    onClose();
     onRejectTransferTicket(data);
   };
 
   const onPrintTicketAction = (data) => {
-    onToggle();
+    onClose();
     onPrintTicket(data);
   };
 
   const onConfirmAction = (data) => {
-    onToggle();
+    onClose();
     onConfirm(data);
   };
 
   const onRejectDateAction = (data) => {
-    onToggle();
+    onClose();
     onRejectDate(data);
   };
 
   const onCopyOpenTicket = async (data) => {
-    const message = `Fresh Morning, ${data?.requestor_Name}, ${data?.department_Name}. Your request has been successfully received under Service Ticket #${moment(
-      data?.created_At,
-    ).format(
+    const message = `Fresh Morning, ${data?.requestor_Name}, ${data?.department_Name}. Your request has been successfully received under Service Ticket #${moment(data?.created_At).format(
       "YYYY",
     )}-${data?.ticketConcernId}. Will review your concern, and you will be updated once action has been taken. Thank you!`;
 
@@ -128,7 +126,7 @@ const IssueHandlerConcernsActions = ({
     } catch (err) {
       toast.error("Failed to copy Ticket details");
     }
-    onToggle();
+    onClose();
   };
 
   const onCopyConfirmTicket = async (data) => {
@@ -144,32 +142,26 @@ const IssueHandlerConcernsActions = ({
     } catch (err) {
       toast.error("Failed to copy Ticket details");
     }
-    onToggle();
+    onClose();
   };
 
   const menuItems = [];
 
   if (data?.ticket_Status === "Open Ticket") {
     menuItems.push(
-      <MenuItem key="close" onClick={() => onCloseTicketAction(data)}>
+      <MenuItem key="close" onClick={() => onCloseTicketAction(data)} disabled={!data?.target_Date}>
         <ListItemIcon>
           <ChecklistRtlOutlined fontSize="small" />
         </ListItemIcon>
         Close
       </MenuItem>,
-      <MenuItem key="transfer" onClick={() => onTransferTicketAction(data)}>
-        <ListItemIcon>
-          <MoveDownOutlined fontSize="small" />
-        </ListItemIcon>
-        Transfer
-      </MenuItem>,
-      <MenuItem key="hold" onClick={() => onHoldTicketAction(data)}>
+      <MenuItem key="hold" onClick={() => onHoldTicketAction(data)} disabled={!data?.target_Date}>
         <ListItemIcon>
           <PendingOutlined fontSize="small" />
         </ListItemIcon>
         Hold
       </MenuItem>,
-      <MenuItem key="hold" onClick={() => onCopyOpenTicket(data)}>
+      <MenuItem key="copy-open" onClick={() => onCopyOpenTicket(data)}>
         <ListItemIcon>
           <ContentCopyOutlined fontSize="small" />
         </ListItemIcon>
@@ -260,11 +252,7 @@ const IssueHandlerConcernsActions = ({
     );
   }
 
-  if (
-    data?.getForClosingTickets?.[0]?.isApprove === true &&
-    data?.ticket_Status !== "For Transfer" &&
-    data?.ticket_Status !== "Closed"
-  ) {
+  if (data?.getForClosingTickets?.[0]?.isApprove === true && data?.ticket_Status !== "For Transfer" && data?.ticket_Status !== "Closed") {
     menuItems.push(
       <MenuItem onClick={() => onCopyConfirmTicket(data)}>
         <ListItemIcon>
@@ -275,12 +263,7 @@ const IssueHandlerConcernsActions = ({
     );
   }
 
-  if (
-    data?.getForClosingTickets?.[0]?.isApprove === true &&
-    data?.ticket_Status !== "For Transfer" &&
-    userDetails?.id === data?.requestor_By &&
-    data?.ticket_Status !== "Closed"
-  ) {
+  if (data?.getForClosingTickets?.[0]?.isApprove === true && data?.ticket_Status !== "For Transfer" && userDetails?.id === data?.requestor_By && data?.ticket_Status !== "Closed") {
     menuItems.push(
       <MenuItem onClick={() => onConfirmAction(data)}>
         <ListItemIcon>
@@ -339,7 +322,7 @@ const IssueHandlerConcernsActions = ({
         <MoreHoriz />
       </IconButton>
 
-      <Menu anchorEl={ref.current} open={open} onClose={onToggle}>
+      <Menu anchorEl={ref.current} open={open} onClose={onClose}>
         {menuItems}
       </Menu>
     </>

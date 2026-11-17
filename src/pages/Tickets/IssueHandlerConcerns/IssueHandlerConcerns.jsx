@@ -6,7 +6,6 @@ import {
   CardContent,
   Checkbox,
   Chip,
-  CircularProgress,
   Divider,
   IconButton,
   OutlinedInput,
@@ -39,23 +38,23 @@ import {
   PendingActionsOutlined,
   PendingOutlined,
   Search,
-  ThumbDownOffAlt,
 } from "@mui/icons-material";
 import React, { useEffect, useMemo, useState } from "react";
 
-import useDebounce from "../../../hooks/useDebounce";
-import useDisclosure from "../../../hooks/useDisclosure";
-import noRecordsFound from "../../../assets/svg/noRecordsFound.svg";
-import somethingWentWrong from "../../../assets/svg/SomethingWentWrong.svg";
-
 import moment from "moment";
 import Swal from "sweetalert2";
+import useDebounce from "../../../hooks/useDebounce";
+import useDisclosure from "../../../hooks/useDisclosure";
+
 import { toast } from "sonner";
+import { PDFDocument } from "pdf-lib";
 import { theme } from "../../../theme/theme";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { LoadingButton } from "@mui/lab";
+import { global } from "../../../styles/global";
 import { ticketStyle as sx } from "./style/ticketStyle";
+import { CardListSkeleton, NoRecordsFound, NoRecordsFoundTable, SomethingWentWrong, SomethingWentWrongTable, TableSkeleton } from "../../../components/TableState";
 
 import {
   useCancelClosingIssueHandlerTicketsMutation,
@@ -71,48 +70,37 @@ import { useConfirmConcernMutation } from "../../../features/api_request/concern
 import IssueViewDialog from "./IssueViewDialog";
 import IssueHandlerConcernsActions from "./IssuHandlerConcernsActions";
 import IssueHandlerClosingDialog from "./IssueHandlerClosingDialog";
-import ManageTicketDialog from "./ManageTicketDialog";
 import TicketFiltering from "./TicketFiltering";
-import TicketForTransferDialog from "./TicketForTransferDialog";
-import ManageTransferDialog from "./ManageTransferDialog";
 import PrintServiceReport from "./PrintServiceReport";
 import IssueHandlerHoldDialog from "./IssueHandlerHoldDialog";
 import ManageOnHoldTicketDialog from "./ManageOnHoldTicketDialog";
-import ApproveTransferTicket from "./ApproveTransferTicket";
 import AddTicketDialog from "./AddTicketDialog";
-import RejectTransfer from "./RejectTransfer";
-import RejectDateDialog from "./RejectDateDialog";
 
 import srReport from "../../../pdf/MIS_SRFinal_v2.pdf";
-import { PDFDocument } from "pdf-lib";
-import { global } from "../../../styles/global";
-import { CardListSkeleton, NoRecordsFound, NoRecordsFoundTable, SomethingWentWrong, SomethingWentWrongTable, TableSkeleton } from "../../../components/TableState";
+import SetTargetDateDialog from "./SetTargetDateDialog";
 
 const IssueHandlerConcerns = () => {
-  const theming = useTheme();
   const ascending = useSelector((state) => state.root.ascending);
   const pageNumber = useSelector((state) => state.root.pageNumber);
   const pageSize = useSelector((state) => state.root.pageSize);
   const searchValue = useSelector((state) => state.root.searchValue);
   const search = useDebounce(searchValue, 500);
 
-  const [ticketStatus, setTicketStatus] = useState("For Approval");
+  const [ticketStatus, setTicketStatus] = useState("Open Ticket");
   const [filterStatus, setFilterStatus] = useState(null);
   const [ascendingDate, setAscendingDate] = useState(true);
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
 
-  const [rejectDateData, setRejectDateData] = useState(null);
   const [viewData, setViewData] = useState(null);
   const [holdTicketData, setHoldTicketData] = useState(null);
   const [closeTicketData, setCloseTicketData] = useState(null);
-  const [transferTicketData, setTransferTicketData] = useState(null);
+  const [getSetTargetData, setGetTargetData] = useState(null);
   const [printData, setPrintData] = useState(null);
 
   const [selectedTickets, setSelectedTickets] = useState([]);
   const userDetails = useSelector((state) => state?.user);
 
-  const [cancelTransferTicket] = useCancelTransferTicketMutation();
   const [resumeIssueHandlerTickets] = useResumeIssueHandlerTicketsMutation();
   const [cancelClosingTickets] = useCancelClosingIssueHandlerTicketsMutation();
   const [confirmConcern, { isLoading: confirmConcernIsLoading, isFetching: confirmConcernIsFetching }] = useConfirmConcernMutation();
@@ -122,13 +110,8 @@ const IssueHandlerConcerns = () => {
   const { open: holdTicketOpen, onToggle: holdTicketOnToggle, onClose: holdTicketOnClose } = useDisclosure();
   const { open: manageHoldTicketOpen, onToggle: manageHoldTicketOnToggle, onClose: manageHoldTicketOnClose } = useDisclosure();
   const { open: closeTicketOpen, onToggle: closeTicketOnToggle, onClose: closeTicketOnClose } = useDisclosure();
-  const { open: manageTicketOpen, onToggle: manageTicketOnToggle, onClose: manageTicketOnClose } = useDisclosure();
-  const { open: transferTicketOpen, onToggle: transferTicketOnToggle, onClose: transferTicketOnClose } = useDisclosure();
-  const { open: rejectTransferOpen, onToggle: rejectTransferOnToggle, onClose: rejectTransferOnClose } = useDisclosure();
-  const { open: manageTransferOpen, onToggle: manageTransferOnToggle, onClose: manageTransferOnClose } = useDisclosure();
-  const { open: approveTransferOpen, onToggle: approveTransferOnToggle, onClose: approveTransferOnClose } = useDisclosure();
   const { open: printTicketOpen, onClose: printTicketOnClose } = useDisclosure();
-  const { open: rejectDateOpen, onToggle: rejectDateOnToggle, onClose: rejectDateOnClose } = useDisclosure();
+  const { open: getSetTargetOpen, onToggle: getSetTargetOnToggle, onClose: getSetTargetOnClose } = useDisclosure();
 
   const dispatch = useDispatch();
   const isScreenSmall = useMediaQuery(theme.breakpoints.down("md"));
@@ -173,6 +156,11 @@ const IssueHandlerConcerns = () => {
     setViewData(data);
   };
 
+  const onGetSetTargetAction = (data) => {
+    getSetTargetOnToggle();
+    setGetTargetData(data);
+  };
+
   const onHoldTicketAction = (data) => {
     holdTicketOnToggle();
     setHoldTicketData(data);
@@ -186,31 +174,6 @@ const IssueHandlerConcerns = () => {
   const onCloseTicketAction = (data) => {
     closeTicketOnToggle();
     setCloseTicketData(data);
-  };
-
-  const onManageTicketAction = (data) => {
-    manageTicketOnToggle();
-    setCloseTicketData(data);
-  };
-
-  const onTransferTicketAction = (data) => {
-    transferTicketOnToggle();
-    setTransferTicketData(data);
-  };
-
-  const onRejectTransferTicketAction = (data) => {
-    rejectTransferOnToggle();
-    setTransferTicketData(data);
-  };
-
-  const onManageTransferAction = (data) => {
-    manageTransferOnToggle();
-    setTransferTicketData(data);
-  };
-
-  const onApproveTransferAction = (data) => {
-    approveTransferOnToggle();
-    setTransferTicketData(data);
   };
 
   const onPrintTicketAction = async (data) => {
@@ -401,11 +364,6 @@ const IssueHandlerConcerns = () => {
     });
   };
 
-  const onRejectDateAction = (data) => {
-    rejectDateOnToggle();
-    setRejectDateData(data);
-  };
-
   const onResumeTicketAction = (data) => {
     const payload = {
       ticketOnHoldId: data?.getOnHolds?.[0]?.id,
@@ -447,53 +405,6 @@ const IssueHandlerConcerns = () => {
           })
           .catch((err) => {
             console.log("Error", err);
-            toast.error("Error!", {
-              description: err.data.error.message,
-              duration: 1500,
-            });
-          });
-      }
-    });
-  };
-
-  const onCancelTransferAction = (data) => {
-    const payload = {
-      transferTicketId: data?.getForTransferTickets?.[0]?.transferTicketConcernId,
-    };
-
-    Swal.fire({
-      title: "Confirmation",
-      text: `Cancel transfer ticket number ${moment(data?.created_At).format("YYYY")}-${data?.ticketConcernId}?`,
-      icon: "info",
-      color: "white",
-      showCancelButton: true,
-      background: "#111927",
-      confirmButtonColor: "#9e77ed",
-      confirmButtonText: "Yes",
-      cancelButtonText: "No",
-      cancelButtonColor: "#1C2536",
-      heightAuto: false,
-      width: "30em",
-      customClass: {
-        container: "custom-container",
-        title: "custom-title",
-        htmlContainer: "custom-text",
-        icon: "custom-icon",
-        confirmButton: "custom-confirm-btn",
-        cancelButton: "custom-cancel-btn",
-      },
-    }).then((result) => {
-      if (result.isConfirmed) {
-        cancelTransferTicket(payload)
-          .unwrap()
-          .then(() => {
-            toast.success("Success!", {
-              description: "Cancel request transfer successfully!",
-              duration: 1500,
-            });
-            dispatch(notificationApi.util.resetApiState());
-          })
-          .catch((err) => {
             toast.error("Error!", {
               description: err.data.error.message,
               duration: 1500,
@@ -676,7 +587,6 @@ const IssueHandlerConcerns = () => {
 
   const onDialogClose = () => {
     setCloseTicketData(null);
-    setTransferTicketData(null);
     setPrintData(null);
     closeTicketOnClose();
   };
@@ -703,11 +613,12 @@ const IssueHandlerConcerns = () => {
   }, [ticketStatus]);
 
   const tableColumns = [
-    { type: "checkbox", hidden: ticketStatus !== "For Confirmation" }, // Confirmation Checkbox
+    // { type: "checkbox", hidden: ticketStatus !== "For Confirmation" }, // Confirmation Checkbox
     { type: "text", width: 80 }, // Ticket no.
     { type: "multiline" }, // Requestor
     { type: "multiline" }, // Ticket Description
-    { type: "multiline" }, // Category
+    { type: "text", width: 80 }, // Category
+    { type: "text", width: 80 }, // Concern Type
     { type: "chip", hidden: ticketStatus === "For Approval" }, // Ticketed date
     { type: "chip" }, // Target date
     { type: "chip", hidden: ticketStatus !== "Closed" && ticketStatus !== "" }, // Closed date
@@ -723,16 +634,12 @@ const IssueHandlerConcerns = () => {
       {/* Header */}
       <Stack sx={sx.pageHeader}>
         <Typography variant={isScreenSmall ? "h5" : "h4"}>Tickets</Typography>
-
-        <Button size={isScreenSmall ? "small" : "medium"} variant="contained" color="primary" startIcon={<DiscountOutlined />} onClick={addTicketOnToggle} sx={{ fontSize: "11px" }}>
-          Add Ticket
-        </Button>
       </Stack>
 
       {/* Selection */}
       {selectedTickets.length > 0 && (
         <Stack sx={sx.selectionContainer}>
-          <Stack direction="row" gap={0.5}>
+          <Stack sx={sx.selectionLeftContent}>
             <LocalOffer />
             <Typography>
               {selectedTickets.length} {""}
@@ -740,11 +647,9 @@ const IssueHandlerConcerns = () => {
             </Typography>
           </Stack>
 
-          <Stack direction="row" gap={0.5}>
-            <LoadingButton variant="contained" color="success" onClick={onSelectedConfirmAction} loading={confirmConcernIsLoading || confirmConcernIsFetching} startIcon={<Check />}>
-              Confirm
-            </LoadingButton>
-          </Stack>
+          <LoadingButton variant="contained" color="success" onClick={onSelectedConfirmAction} loading={confirmConcernIsLoading || confirmConcernIsFetching} startIcon={<Check />}>
+            Confirm
+          </LoadingButton>
         </Stack>
       )}
 
@@ -752,55 +657,6 @@ const IssueHandlerConcerns = () => {
       <Stack sx={sx.contentContainer}>
         <Stack sx={sx.tabsContainer}>
           <Tabs value={ticketStatus} onChange={onStatusChange} variant="scrollable" scrollButtons="auto" sx={sx.tabs}>
-            <Tab
-              className="tabs-styling"
-              value="For Approval"
-              label="Ticket Requests"
-              icon={
-                <Badge
-                  badgeContent={notificationBadge?.value?.approvalDateNotif}
-                  max={100000}
-                  color="warning"
-                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                  sx={{
-                    ".MuiBadge-badge": {
-                      fontSize: "0.55rem",
-                      fontWeight: 400,
-                    },
-                  }}
-                >
-                  <DiscountOutlined />
-                </Badge>
-              }
-              iconPosition="start"
-              sx={sx.tab}
-            />
-
-            <Tab
-              className="tabs-styling"
-              value="Date Rejected"
-              label="Declined"
-              icon={
-                <Badge
-                  badgeContent={notificationBadge?.value?.dateRejectedNotif}
-                  max={100000}
-                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                  sx={{
-                    ".MuiBadge-badge": {
-                      fontSize: "0.55rem",
-                      fontWeight: 400,
-                      background: "#ff7043",
-                      color: "#ffff",
-                    },
-                  }}
-                >
-                  <ThumbDownOffAlt />
-                </Badge>
-              }
-              iconPosition="start"
-              sx={sx.tab}
-            />
-
             <Tab
               className="tabs-styling"
               value="Open Ticket"
@@ -824,34 +680,6 @@ const IssueHandlerConcerns = () => {
               }
               iconPosition="start"
               sx={sx.tabs}
-            />
-
-            <Tab
-              className="tabs-styling"
-              value="For Transfer"
-              label="For Transfer"
-              icon={
-                <Badge
-                  badgeContent={notificationBadge?.value?.forTransferNotif}
-                  max={100000}
-                  anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                  sx={{
-                    ".MuiBadge-badge": {
-                      fontSize: "0.55rem",
-                      fontWeight: 400,
-                      background: "#ff7043",
-                      color: "#ffff",
-                    },
-                  }}
-                >
-                  <MoveDownOutlined />
-                </Badge>
-              }
-              iconPosition="start"
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-              }}
             />
 
             <Tab
@@ -901,38 +729,6 @@ const IssueHandlerConcerns = () => {
                   }}
                 >
                   <PendingOutlined />
-                </Badge>
-              }
-              iconPosition="start"
-              sx={{
-                fontSize: "12px",
-                fontWeight: 600,
-              }}
-            />
-
-            <Tab
-              className="tabs-styling"
-              value="For Closing Ticket"
-              label="For Closing"
-              icon={
-                <Badge
-                  badgeContent={notificationBadge?.value?.forCloseNotif}
-                  max={100000}
-                  // color="primary"
-                  anchorOrigin={{
-                    vertical: "top",
-                    horizontal: "left",
-                  }}
-                  sx={{
-                    ".MuiBadge-badge": {
-                      fontSize: "0.55rem",
-                      fontWeight: 400,
-                      background: "#3A96FA",
-                      color: "#ffff",
-                    },
-                  }}
-                >
-                  <PendingActionsOutlined />
                 </Badge>
               }
               iconPosition="start"
@@ -1035,7 +831,7 @@ const IssueHandlerConcerns = () => {
             />
           </Tabs>
 
-          <Stack direction="row" sx={{ alignItems: "center", justifyContent: "center" }}>
+          <Stack sx={sx.calendarBox}>
             {ticketStatus === "" && (
               <TicketFiltering filterStatus={filterStatus} setFilterStatus={setFilterStatus} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} />
             )}
@@ -1051,17 +847,8 @@ const IssueHandlerConcerns = () => {
         {isScreenSmall ? (
           // Card
           <>
-            {ticketStatus === "For Confirmation" && (
-              <Stack
-                direction="row"
-                sx={{
-                  width: "100%",
-                  mb: 2,
-                  justifyContent: "left",
-                  alignItems: "center",
-                  backgroundColor: "#2A2C4D",
-                }}
-              >
+            {/* {ticketStatus === "For Confirmation" && (
+              <Stack sx={sx.cardSelectAll}>
                 <Checkbox
                   indeterminate={selectedTickets.length > 0 && selectedTickets.length < selectableTickets.length}
                   checked={selectableTickets.length > 0 && selectedTickets.length === selectableTickets.length}
@@ -1070,22 +857,16 @@ const IssueHandlerConcerns = () => {
                 />
                 <Typography>Select All</Typography>
               </Stack>
-            )}
+            )} */}
 
             <Stack spacing={2}>
               {success &&
                 rows?.map((item) => (
                   <Card key={item.ticketConcernId} sx={sx.cards}>
                     <CardContent sx={sx.cardContent}>
-                      <Stack
-                        spacing={1}
-                        direction="row"
-                        sx={{
-                          alignItems: "center",
-                        }}
-                      >
+                      <Stack sx={sx.cardContentBox}>
                         {/* Confirmation Checkbox */}
-                        {ticketStatus === "For Confirmation" && (
+                        {/* {ticketStatus === "For Confirmation" && (
                           <Stack>
                             <Checkbox
                               checked={selectedTickets.includes(item.requestConcernId)}
@@ -1096,9 +877,9 @@ const IssueHandlerConcerns = () => {
                               disabled={item?.requestor_Name !== userDetails?.fullname}
                             />
                           </Stack>
-                        )}
+                        )} */}
 
-                        <Stack sx={{ width: "100%", gap: 1 }} onClick={() => onViewAction(item)}>
+                        <Stack sx={sx.cardDetailsBox} onClick={() => onViewAction(item)}>
                           {/* Ticket Number */}
                           <Stack sx={global.cardRow}>
                             <Box sx={global.cardDetailBox}>
@@ -1359,16 +1140,10 @@ const IssueHandlerConcerns = () => {
                                   onResumeTicket={onResumeTicketAction}
                                   onHoldManageTicket={onHoldManageTicketAction}
                                   onCloseTicket={onCloseTicketAction}
+                                  onGetSetTarget={onGetSetTargetAction}
                                   onCancelCloseTicket={onCancelCloseAction}
-                                  onManageTicket={onManageTicketAction}
-                                  onTransferTicket={onTransferTicketAction}
-                                  onRejectTransferTicket={onRejectTransferTicketAction}
-                                  onManageTransfer={onManageTransferAction}
-                                  onApproveTransfer={onApproveTransferAction}
-                                  onCancelTransfer={onCancelTransferAction}
                                   onPrintTicket={onPrintTicketAction}
                                   onConfirm={onConfirmAction}
-                                  onRejectDate={onRejectDateAction}
                                 />
                               </Box>
                             </Stack>
@@ -1407,7 +1182,7 @@ const IssueHandlerConcerns = () => {
                 <TableHead sx={{ whiteSpace: "nowrap" }}>
                   <TableRow>
                     {/* Confirmation checkbox */}
-                    {ticketStatus === "For Confirmation" && (
+                    {/* {ticketStatus === "For Confirmation" && (
                       <TableCell
                         padding="checkbox"
                         sx={{
@@ -1425,7 +1200,7 @@ const IssueHandlerConcerns = () => {
                           inputProps={{ "aria-label": "select all tickets" }}
                         />
                       </TableCell>
-                    )}
+                    )} */}
 
                     {/* Ticket No */}
                     <TableCell sx={sx.tableCellHeader}>
@@ -1450,6 +1225,8 @@ const IssueHandlerConcerns = () => {
                     <TableCell sx={sx.tableCellHeader}>TICKET DESCRIPTION</TableCell>
                     {/* Category */}
                     <TableCell sx={sx.tableCellHeader}>CATEGORY</TableCell>
+                    {/* Concern Type */}
+                    <TableCell sx={sx.tableCellHeader}>CONCERN TYPE</TableCell>
                     {/* Ticketed Date */}
                     {ticketStatus !== "For Approval" && <TableCell sx={sx.tableCellHeader}>TICKETED DATE</TableCell>}
                     {/* Target Date */}
@@ -1516,7 +1293,7 @@ const IssueHandlerConcerns = () => {
                               },
                             }}
                           >
-                            {ticketStatus === "For Confirmation" && (
+                            {/* {ticketStatus === "For Confirmation" && (
                               <TableCell padding="checkbox" sx={sx.tableCellBody} align="center">
                                 <Checkbox
                                   checked={selectedTickets.includes(item.requestConcernId)}
@@ -1527,14 +1304,14 @@ const IssueHandlerConcerns = () => {
                                   disabled={item?.requestor_Name !== userDetails?.fullname}
                                 />
                               </TableCell>
-                            )}
+                            )} */}
 
                             <TableCell sx={sx.tableCellBody} onClick={() => onViewAction(item)}>
                               {`${moment(item.created_At).format("YYYY")}-${item.ticketConcernId}`}
                             </TableCell>
 
                             <TableCell onClick={() => onViewAction(item)}>
-                              <Stack sx={{ width: "180px" }}>
+                              <Stack sx={{ width: "250px" }}>
                                 <Typography sx={sx.titleTableText}>{item.requestor_Name}</Typography>
                                 <Typography sx={sx.descTableText}>{item.department_Name}</Typography>
                                 <Typography sx={sx.descTableText}>{item.location_Name}</Typography>
@@ -1560,38 +1337,28 @@ const IssueHandlerConcerns = () => {
                               }}
                               onClick={() => onViewAction(item)}
                             >
-                              <Stack gap={0.5}>
-                                <Stack>
-                                  <Typography sx={sx.titleAccentTableText}>Category:</Typography>
-                                  {item?.getOpenTicketCategories?.length > 0 ? (
-                                    <>
-                                      {item?.getOpenTicketCategories?.map((item, i) => (
-                                        <Typography key={i} sx={sx.descAccentTableText}>
-                                          {i + 1}. {item.category_Description}
-                                        </Typography>
-                                      ))}
-                                    </>
-                                  ) : (
-                                    <Typography sx={sx.descAccentTableText}>--</Typography>
-                                  )}
-                                </Stack>
+                              {item?.getOpenTicketCategories?.length > 0 ? (
+                                <>
+                                  {item?.getOpenTicketCategories?.map((item, i) => (
+                                    <Typography key={i} sx={sx.descAccentTableText}>
+                                      {i + 1}. {item.category_Description}
+                                    </Typography>
+                                  ))}
+                                </>
+                              ) : (
+                                <Typography sx={sx.descAccentTableText}>--</Typography>
+                              )}
+                            </TableCell>
 
-                                <Stack>
-                                  <Typography sx={sx.titleAccentTableText}>Sub Category:</Typography>
-
-                                  {item?.getOpenTicketSubCategories?.length > 0 ? (
-                                    <>
-                                      {item?.getOpenTicketSubCategories?.map((item, i) => (
-                                        <Typography key={i} sx={sx.descAccentTableText}>
-                                          {i + 1}. {item.subCategory_Description}
-                                        </Typography>
-                                      ))}
-                                    </>
-                                  ) : (
-                                    <Typography sx={sx.descAccentTableText}>--</Typography>
-                                  )}
-                                </Stack>
-                              </Stack>
+                            <TableCell
+                              className="ellipsis-styling"
+                              sx={{
+                                color: "#EDF2F7",
+                                width: "500px",
+                              }}
+                              onClick={() => onViewAction(item)}
+                            >
+                              {item?.concernType}
                             </TableCell>
 
                             {ticketStatus !== "For Approval" && (
@@ -1652,7 +1419,7 @@ const IssueHandlerConcerns = () => {
                                     />
                                   </>
                                 ) : (
-                                  ""
+                                  "--"
                                 )}
                               </TableCell>
                             )}
@@ -1671,7 +1438,7 @@ const IssueHandlerConcerns = () => {
                                 align="center"
                                 onClick={() => onViewAction(item)}
                               >
-                                {item.aging_Days !== null ? `${item.aging_Days} day(s)` : ""}
+                                {item.aging_Days !== null ? `${item.aging_Days} day(s)` : "--"}
                               </TableCell>
                             )}
 
@@ -1681,7 +1448,7 @@ const IssueHandlerConcerns = () => {
                                   <Chip
                                     variant="filled"
                                     size="small"
-                                    label={item.remarks ? item.remarks : ""}
+                                    label={item.remarks ? item.remarks : "--"}
                                     sx={{
                                       ...sx.remarksChip,
                                       backgroundColor: item.remarks === null ? "transparent" : item.remarks === "Ticket Closed" ? "#00913c" : theme.palette.error.main,
@@ -1819,20 +1586,14 @@ const IssueHandlerConcerns = () => {
                               <TableCell sx={sx.tableCellBody}>
                                 <IssueHandlerConcernsActions
                                   data={item}
+                                  onGetSetTarget={onGetSetTargetAction}
                                   onHoldTicket={onHoldTicketAction}
                                   onResumeTicket={onResumeTicketAction}
                                   onHoldManageTicket={onHoldManageTicketAction}
                                   onCloseTicket={onCloseTicketAction}
                                   onCancelCloseTicket={onCancelCloseAction}
-                                  onManageTicket={onManageTicketAction}
-                                  onTransferTicket={onTransferTicketAction}
-                                  onRejectTransferTicket={onRejectTransferTicketAction}
-                                  onManageTransfer={onManageTransferAction}
-                                  onApproveTransfer={onApproveTransferAction}
-                                  onCancelTransfer={onCancelTransferAction}
                                   onPrintTicket={onPrintTicketAction}
                                   onConfirm={onConfirmAction}
-                                  onRejectDate={onRejectDateAction}
                                 />
                               </TableCell>
                             )}
@@ -1876,63 +1637,13 @@ const IssueHandlerConcerns = () => {
           viewOnClose={viewOnClose}
           // Buttons in View Dialog ~~~~
           onClosing={onCloseTicketAction}
-          onTransfer={onTransferTicketAction}
           onHold={onHoldTicketAction}
+          onGetSetTarget={onGetSetTargetAction}
         />
       )}
 
       {addTicketOpen && <AddTicketDialog open={addTicketOpen} onClose={addTicketOnClose} />}
-      <IssueHandlerClosingDialog data={closeTicketData} open={closeTicketOpen} onClose={onDialogClose} viewOnClose={viewOnClose} />
-
-      <RejectDateDialog
-        data={rejectDateData}
-        open={rejectDateOpen}
-        onClose={() => {
-          rejectDateOnClose(setRejectDateData(null));
-        }}
-        refetch={refetch}
-      />
-
-      <ManageTicketDialog
-        data={closeTicketData}
-        open={manageTicketOpen}
-        onClose={() => {
-          manageTicketOnClose(setCloseTicketData(null));
-        }}
-        refetch={refetch}
-      />
-
-      {transferTicketOpen && (
-        <TicketForTransferDialog
-          data={transferTicketData}
-          open={transferTicketOpen}
-          onClose={() => {
-            transferTicketOnClose(setTransferTicketData(null));
-          }}
-          viewOnClose={viewOnClose}
-        />
-      )}
-
-      <ManageTransferDialog
-        data={transferTicketData}
-        open={manageTransferOpen}
-        onClose={() => {
-          manageTransferOnClose(setTransferTicketData(null));
-        }}
-        refetch={refetch}
-      />
-
-      {approveTransferOpen && (
-        <ApproveTransferTicket
-          data={transferTicketData}
-          open={approveTransferOpen}
-          onClose={() => {
-            approveTransferOnClose(setTransferTicketData(null));
-          }}
-        />
-      )}
-
-      {rejectTransferOpen && <RejectTransfer data={transferTicketData} open={rejectTransferOpen} onClose={rejectTransferOnClose} />}
+      {closeTicketOpen && <IssueHandlerClosingDialog data={closeTicketData} open={closeTicketOpen} onClose={onDialogClose} viewOnClose={viewOnClose} />}
 
       {holdTicketOpen && (
         <IssueHandlerHoldDialog
@@ -1963,6 +1674,17 @@ const IssueHandlerConcerns = () => {
           onClose={() => {
             printTicketOnClose(setPrintData(null));
           }}
+        />
+      )}
+
+      {getSetTargetOpen && (
+        <SetTargetDateDialog
+          data={getSetTargetData}
+          open={getSetTargetOpen}
+          onClose={() => {
+            getSetTargetOnClose(setGetTargetData(null));
+          }}
+          viewOnClose={viewOnClose}
         />
       )}
     </Stack>

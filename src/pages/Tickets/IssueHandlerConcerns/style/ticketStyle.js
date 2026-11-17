@@ -80,6 +80,49 @@ export const ticketStyle = {
     color: theme.palette.text.secondary,
   },
 
+  calendarBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  selectionBox: {
+    padding: "10px 20px",
+    backgroundColor: theme.palette.bgForm.black2,
+    borderRadius: "20px",
+    marginBottom: 0.5,
+    marginTop: 0.5,
+    justifyContent: "space-between",
+    gap: 0.5,
+    flexDirection: { xs: "column", md: "row" },
+    alignItems: { xs: "left", md: "center" },
+  },
+
+  selectionLeftContent: {
+    flexDirection: "row",
+    gap: 0.5,
+  },
+
+  cardSelectAll: {
+    width: "100%",
+    flexDirection: "row",
+    mb: 2,
+    justifyContent: "left",
+    alignItems: "center",
+    backgroundColor: "#2A2C4D",
+  },
+
+  cardContentBox: {
+    spacing: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  cardDetailsBox: {
+    width: "100%",
+    gap: 1,
+  },
+
   // ** Header
   header: {
     flexDirection: "row",
@@ -428,6 +471,10 @@ export const ticketStyle = {
   },
 
   emptyText: { fontSize: 13, color: t.muted, textAlign: "center", py: 3 },
+  customButtonText: {
+    fontSize: "12px",
+    fontWeight: 550,
+  },
 
   // Table
   tableCellHeader: {
@@ -572,5 +619,61 @@ export const ticketStyle = {
     fontSize: "small",
     fontWeight: 400,
     lineHeight: "1.4375rem",
+  },
+
+  closeTixBtn: {
+    ":disabled": {
+      backgroundColor: "#48bb7881",
+      color: "black",
+    },
+  },
+
+  holdTixBtn: {
+    ":disabled": {
+      backgroundColor: "#ff990080",
+      color: "black",
+    },
+  },
+
+  targetTableCell: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  titleHeaderBox: {
+    width: "100%",
+    flexDirection: "row",
+    // justifyContent: "space-between",
+    alignItems: "center",
+    gap: 1,
+  },
+
+  // Status chip — glowing dot + pill, color depends on active state
+  approvedChip: () => ({
+    height: "24px",
+    fontSize: "11px",
+    fontWeight: 700,
+    letterSpacing: "0.5px",
+    borderRadius: "8px",
+    backgroundColor: "#0F2B28",
+    color: "#10B981",
+    border: `1px solid rgba(16, 185, 129, 0.35)`,
+    "& .MuiChip-label": { paddingLeft: "8px", paddingRight: "10px" },
+    "&::before": {
+      content: '""',
+      display: "block",
+      width: "6px",
+      height: "6px",
+      marginLeft: "8px",
+      borderRadius: "50%",
+      backgroundColor: "#10B981",
+      boxShadow: `0 0 6px #10B981`,
+    },
+  }),
+
+  dateIcon: {
+    fontSize: "8px",
   },
 };

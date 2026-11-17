@@ -4,6 +4,7 @@ import {
   Avatar,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -19,7 +20,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { AttachFile, AttachFileOutlined, ChecklistRtlOutlined, Close, MoveDownOutlined, PendingOutlined, Receipt, RestartAlt, ZoomIn, ZoomOut } from "@mui/icons-material";
+import { AttachFile, AttachFileOutlined, ChecklistRtlOutlined, Close, DateRangeOutlined, MoveDownOutlined, PendingOutlined, Receipt, RestartAlt, ZoomIn, ZoomOut } from "@mui/icons-material";
 
 import { theme } from "../../../theme/theme";
 import moment from "moment";
@@ -30,7 +31,6 @@ import { useLazyGetDownloadAttachmentQuery, useLazyGetViewAttachmentQuery } from
 import TicketHistory from "./TicketHistory";
 import ViewTicketMenuActions from "./MenuActions/ViewTicketMenuActions";
 import IssueHandlerClosingDialog from "./IssueHandlerClosingDialog";
-import TicketForTransferDialog from "./TicketForTransferDialog";
 import IssueHandlerHoldDialog from "./IssueHandlerHoldDialog";
 
 import { toast } from "sonner";
@@ -38,11 +38,12 @@ import { useSelector } from "react-redux";
 import { global } from "../../../styles/global";
 import { ticketStyle as sx } from "./style/ticketStyle";
 import { getAttachmentIcon } from "../../../utils/getAttachmentIcon";
+import SetTargetDateDialog from "./SetTargetDateDialog";
 
-const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, onHold }) => {
+const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onHold, onGetSetTarget }) => {
   const [attachments, setAttachments] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null); // To handle the selected image
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false); // To control the view dialog
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [viewIsLoading, setViewIsLoading] = useState(false);
 
   const [loadingAttachmentId, setLoadingAttachmentId] = useState(null);
@@ -50,8 +51,7 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
 
   const channelNameValidation = useSelector((state) => state?.user?.channels?.[0]?.channelName);
 
-  const [getRequestorAttachment, { isLoading: attachmentIsLoading, isError: attachmentIsError, isFetching: attachmentIsFetching, isSuccess: attachmentIsSuccess }] =
-    useLazyGetRequestorAttachmentQuery();
+  const [getRequestorAttachment, { isLoading: attachmentIsLoading, isFetching: attachmentIsFetching, isSuccess: attachmentIsSuccess }] = useLazyGetRequestorAttachmentQuery();
   const [getViewAttachment] = useLazyGetViewAttachmentQuery();
   const [getDownloadAttachment] = useLazyGetDownloadAttachmentQuery();
 
@@ -71,10 +71,6 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
   };
 
   const onCloseHandler = () => {
-    viewOnClose();
-  };
-
-  const onTransferCloseHandler = () => {
     viewOnClose();
   };
 
@@ -150,7 +146,6 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
 
   // Filter once per attachments change instead of on every render
   const imageAttachments = useMemo(() => attachments.filter((a) => isImagePreview(a.name)), [attachments]);
-
   const otherAttachments = useMemo(() => attachments.filter((a) => !isImagePreview(a.name)), [attachments]);
 
   // Only refetch when the ticket itself changes, not whenever the `data` object reference changes
@@ -159,8 +154,6 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
       getAttachmentData(data.ticketConcernId);
     }
   }, [data?.ticketConcernId]);
-
-  const TABLE_COLUMNS = ["TICKET NO.", "TICKET DESCRIPTION", "DATE NEEDED", "TARGET DATE"];
 
   const trimLetters = (name) => {
     if (!name) return "";
@@ -171,8 +164,6 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
       .join("");
     return initials.split("").reverse().join("");
   };
-
-  console.log("Data: ", data);
 
   return (
     <>
@@ -188,7 +179,7 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
           onCloseHandler();
         }}
         disableEscapeKeyDown={false}
-        sx={{ borderRadius: "none", padding: 0, backdropFilter: "blur(5px)" }}
+        sx={global.dialog}
         PaperProps={{ style: { overflow: "auto" } }}
       >
         <DialogContent>
@@ -213,9 +204,12 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
 
           <Stack gap={2} sx={{ marginTop: 2 }}>
             <Stack sx={sx.ticketDetailsSection}>
-              <Stack sx={sx.titleHeader}>
-                <Receipt sx={sx.titleHeaderIcon} />
-                <Typography sx={sx.titleText}>Ticket Details</Typography>
+              <Stack sx={sx.titleHeaderBox}>
+                <Stack sx={sx.titleHeader}>
+                  <Receipt sx={sx.titleHeaderIcon} />
+                  <Typography sx={sx.titleText}>Ticket Details</Typography>
+                </Stack>
+                {data?.getForClosingTickets?.[0]?.isApprove && <Chip variant="filled" size="small" sx={sx.approvedChip} label={"APPROVED"} />}
               </Stack>
 
               {/* Detail Box */}
@@ -290,29 +284,6 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
                   </Box>
                 </Stack>
 
-                {/* Sub-Category */}
-                <Stack sx={sx.detailLayout}>
-                  <Box sx={sx.detailRowTextLayout}>
-                    <Typography sx={sx.ticketTitleLabel}>Sub Category:</Typography>
-                  </Box>
-                  <Box sx={sx.spacer} />
-                  <Box sx={sx.valueBox}>
-                    {data?.getOpenTicketSubCategories?.length > 0 ? (
-                      <>
-                        {data?.getOpenTicketSubCategories?.map((item, i) => (
-                          <>
-                            <Typography key={i} sx={sx.ticketDescLabel}>
-                              {item.subCategory_Description}
-                            </Typography>
-                          </>
-                        ))}
-                      </>
-                    ) : (
-                      <Typography sx={sx.ticketDescLabel}>--</Typography>
-                    )}
-                  </Box>
-                </Stack>
-
                 {/* Concern Category */}
                 {(data?.ticket_Status === "For Closing Ticket" || data?.ticket_Status === "For Confirmation" || data?.ticket_Status === "Closed") && (
                   <Stack sx={sx.detailLayout}>
@@ -346,32 +317,6 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
                     <Box sx={sx.spacer} />
                     <Box sx={sx.valueBox}>
                       <Typography sx={sx.ticketDescLabel}>{data?.getForOnHolds?.[0]?.reason}</Typography>
-                    </Box>
-                  </Stack>
-                )}
-
-                {/* For Transfer Remarks */}
-                {data?.ticket_Status === "For Transfer" && (
-                  <Stack sx={sx.detailLayout}>
-                    <Box sx={sx.detailRowTextLayout}>
-                      <Typography sx={sx.ticketTitleLabel}>Transfer Remarks:</Typography>
-                    </Box>
-                    <Box sx={sx.spacer} />
-                    <Box sx={sx.valueBox}>
-                      <Typography sx={sx.ticketDescLabel}>{data?.getForTransferTickets?.[0]?.transfer_Remarks}</Typography>
-                    </Box>
-                  </Stack>
-                )}
-
-                {/* Transfer Approval Remarks */}
-                {data?.ticket_Status === "Transfer Approval" && (
-                  <Stack sx={sx.detailLayout}>
-                    <Box sx={sx.detailRowTextLayout}>
-                      <Typography sx={sx.ticketTitleLabel}>Transfer Remarks:</Typography>
-                    </Box>
-                    <Box sx={sx.spacer} />
-                    <Box sx={sx.valueBox}>
-                      <Typography sx={sx.ticketDescLabel}>{data?.transferApprovalTickets?.[0]?.transfer_Remarks}</Typography>
                     </Box>
                   </Stack>
                 )}
@@ -441,11 +386,19 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
                     <Table size="small" sx={global.table}>
                       <TableHead sx={global.tableHead}>
                         <TableRow>
-                          {TABLE_COLUMNS.map((column) => (
-                            <TableCell key={column} sx={global.headCell}>
-                              {column}
-                            </TableCell>
-                          ))}
+                          <TableCell sx={global.headCell}>TICKET NO.</TableCell>
+                          <TableCell sx={global.headCell}>TICKET DESCRIPTION</TableCell>
+                          <TableCell sx={global.headCell}>DATE NEEDED</TableCell>
+                          <TableCell sx={global.headCell}>
+                            <Stack sx={sx.targetTableCell}>
+                              TARGET DATE
+                              {!data?.target_Date && (
+                                <Button variant="contained" size="small" onClick={() => onGetSetTarget(data)} color="warning" startIcon={<DateRangeOutlined sx={sx.dateIcon} />}>
+                                  <Typography sx={sx.customButtonText}>Set Date</Typography>
+                                </Button>
+                              )}
+                            </Stack>
+                          </TableCell>
                         </TableRow>
                       </TableHead>
 
@@ -463,7 +416,7 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
                             ))}
                           </TableCell>
                           <TableCell sx={global.bodyCell}>{data?.date_Needed ? moment(data?.date_Needed).format("LL") : "--"}</TableCell>
-                          <TableCell sx={global.bodyCell}>{moment(data?.target_Date).format("LL")}</TableCell>
+                          <TableCell sx={global.bodyCell}>{data?.target_Date ? moment(data?.target_Date).format("LL") : "--"}</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
@@ -572,13 +525,11 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
           {data?.ticket_Status === "Open Ticket" && (
             <>
               <Stack direction="row" gap={0.5} alignItems="center" mb={1}>
-                <Button variant="contained" size="small" onClick={() => onClosing(data)} color="success" startIcon={<ChecklistRtlOutlined />}>
+                <Button variant="contained" size="small" onClick={() => onClosing(data)} color="success" startIcon={<ChecklistRtlOutlined />} disabled={!data?.target_Date} sx={sx.closeTixBtn}>
                   <Typography sx={global.customButtonText}>Close</Typography>
                 </Button>
-                <Button variant="contained" size="small" onClick={() => onTransfer(data)} color="info" startIcon={<MoveDownOutlined />}>
-                  <Typography sx={global.customButtonText}>Transfer</Typography>
-                </Button>
-                <Button variant="contained" size="small" onClick={() => onHold(data)} color="warning" startIcon={<PendingOutlined />}>
+
+                <Button variant="contained" size="small" onClick={() => onHold(data)} color="warning" startIcon={<PendingOutlined />} disabled={!data?.target_Date} sx={sx.holdTixBtn}>
                   <Typography sx={global.customButtonText}>Hold</Typography>
                 </Button>
               </Stack>
@@ -587,7 +538,7 @@ const IssueViewDialog = ({ data, viewOpen, viewOnClose, onClosing, onTransfer, o
         </DialogActions>
 
         <IssueHandlerClosingDialog data={data} viewOnClose={onCloseHandler} />
-        <TicketForTransferDialog data={data} viewOnClose={onTransferCloseHandler} />
+        <SetTargetDateDialog data={data} viewOnClose={viewOnClose} />
         <IssueHandlerHoldDialog data={data} viewOnClose={onHoldCloseHandler} />
       </Dialog>
 

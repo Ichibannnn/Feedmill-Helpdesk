@@ -128,6 +128,12 @@ export const approverStyles = {
   },
 
   // Pending Concern
+
+  mainContainer: {
+    width: "100%",
+    mt: 1,
+  },
+
   textField: {
     "& .MuiInputBase-input": { fontSize: "13px" },
   },
@@ -157,6 +163,13 @@ export const approverStyles = {
     marginTop: 0.5,
     justifyContent: "space-between",
     gap: 0.5,
+    flexDirection: { xs: "column", md: "row" },
+    alignItems: { xs: "left", md: "center" },
+  },
+
+  selectionLeftContent: {
+    flexDirection: "row",
+    gap: 0.5,
   },
 
   paramsBox: {
@@ -166,6 +179,11 @@ export const approverStyles = {
   },
 
   // Cards
+  card: {
+    borderRadius: "15px",
+    borderColor: "#2D3748",
+  },
+
   cardContent: {
     cursor: "pointer",
     padding: "1px",

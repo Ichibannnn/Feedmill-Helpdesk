@@ -1,11 +1,4 @@
-import {
-  ArrowBackOutlined,
-  CloseOutlined,
-  ContentCopyOutlined,
-  DoneOutlined,
-  MoreHoriz,
-  VisibilityOutlined,
-} from "@mui/icons-material";
+import { ArrowBackOutlined, CloseOutlined, ContentCopyOutlined, DoneOutlined, MoreHoriz, VisibilityOutlined } from "@mui/icons-material";
 import { IconButton, ListItemIcon, Menu, MenuItem, Typography } from "@mui/material";
 
 import { useRef } from "react";
@@ -15,7 +8,7 @@ import { theme } from "../../../theme/theme";
 import { toast } from "sonner";
 import moment from "moment";
 
-const ConcernActions = ({ data, onView, onConfirm, onReturn, onCancel, status }) => {
+const ConcernActions = ({ data, onView, onConfirm, onCustomerSatisfaction, onReturn, onCancel, status }) => {
   const ref = useRef(null);
 
   const { open, onToggle } = useDisclosure();
@@ -30,6 +23,11 @@ const ConcernActions = ({ data, onView, onConfirm, onReturn, onCancel, status })
     onConfirm(data);
   };
 
+  const onCustomerSatifcationAction = (data) => {
+    onToggle();
+    onCustomerSatisfaction(data);
+  };
+
   const onReturnAction = (data) => {
     onToggle();
     onReturn(data);
@@ -41,9 +39,9 @@ const ConcernActions = ({ data, onView, onConfirm, onReturn, onCancel, status })
   };
 
   const onCopyTicket = async (data) => {
-    const message = `Fresh Morning, ${data?.fullName}, ${data?.department_Name}. Your request has been successfully created under Service Ticket #${moment(
-      data?.created_At,
-    ).format("YYYY")}-${data?.ticketRequestConcerns?.[0]?.ticketConcernId} and forwarded to our ${
+    const message = `Fresh Morning, ${data?.fullName}, ${data?.department_Name}. Your request has been successfully created under Service Ticket #${moment(data?.created_At).format(
+      "YYYY",
+    )}-${data?.ticketRequestConcerns?.[0]?.ticketConcernId} and forwarded to our ${
       data?.channel_Name
     } for review. A member of the Support Team will contact you shortly to provide further assistance.\n\nConcern: ${data?.concern}`;
 
@@ -57,6 +55,8 @@ const ConcernActions = ({ data, onView, onConfirm, onReturn, onCancel, status })
     }
     onToggle();
   };
+
+  // console.log("Data: ", data);
 
   return (
     <>
@@ -73,14 +73,24 @@ const ConcernActions = ({ data, onView, onConfirm, onReturn, onCancel, status })
         </MenuItem>
 
         {data?.concern_Status === "For Confirmation" && (
-          <MenuItem onClick={() => onConfirmAction(data)}>
-            <ListItemIcon>
-              <DoneOutlined fontSize="small" color="success" />
-            </ListItemIcon>
-            <Typography sx={{ fontSize: "17px", fontWeight: 500, color: theme.palette.success.main }}>
-              Confirm
-            </Typography>
-          </MenuItem>
+          <>
+            {/* If the concern is Internal => Customer Satifaction else the concern is External */}
+            {data?.concernType === "Internal" ? (
+              <MenuItem onClick={() => onCustomerSatifcationAction(data)}>
+                <ListItemIcon>
+                  <DoneOutlined fontSize="small" color="success" />
+                </ListItemIcon>
+                <Typography sx={{ fontSize: "17px", fontWeight: 500, color: theme.palette.success.main }}>Confirm</Typography>
+              </MenuItem>
+            ) : (
+              <MenuItem onClick={() => onConfirmAction(data)}>
+                <ListItemIcon>
+                  <DoneOutlined fontSize="small" color="success" />
+                </ListItemIcon>
+                <Typography sx={{ fontSize: "17px", fontWeight: 500, color: theme.palette.success.main }}>Confirm</Typography>
+              </MenuItem>
+            )}
+          </>
         )}
 
         <MenuItem onClick={() => onCopyTicket(data)}>
@@ -95,9 +105,7 @@ const ConcernActions = ({ data, onView, onConfirm, onReturn, onCancel, status })
             <ListItemIcon>
               <ArrowBackOutlined fontSize="small" color="error" />
             </ListItemIcon>
-            <Typography sx={{ fontSize: "17px", fontWeight: 500, color: theme.palette.error.main }}>
-              Return
-            </Typography>
+            <Typography sx={{ fontSize: "17px", fontWeight: 500, color: theme.palette.error.main }}>Return</Typography>
           </MenuItem>
         )}
 
@@ -106,9 +114,7 @@ const ConcernActions = ({ data, onView, onConfirm, onReturn, onCancel, status })
             <ListItemIcon>
               <CloseOutlined fontSize="small" color="error" />
             </ListItemIcon>
-            <Typography sx={{ fontSize: "17px", fontWeight: 500, color: theme.palette.error.main }}>
-              Cancel
-            </Typography>
+            <Typography sx={{ fontSize: "17px", fontWeight: 500, color: theme.palette.error.main }}>Cancel</Typography>
           </MenuItem>
         )}
       </Menu>

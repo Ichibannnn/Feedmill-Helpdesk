@@ -166,6 +166,11 @@ export const formStyle = {
     padding: 1,
   },
 
+  targetFieldSection: {
+    marginTop: 2,
+    gap: 2,
+  },
+
   fieldSectionTickets: {
     gap: 1,
   },

@@ -63,6 +63,15 @@ export const concernIssueHandlerApi = api.enhanceEndpoints({ addTagTypes: tags }
       invalidatesTags: (_, error) => (error ? [] : tags),
     }),
 
+    updateTargetDate: builder.mutation({
+      query: (body) => ({
+        url: "request-concern/update-target-date",
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: (_, error) => (error ? [] : tags),
+    }),
+
     cancelClosingIssueHandlerTickets: builder.mutation({
       query: (body) => ({
         url: "closing-ticket/cancel",
@@ -120,6 +129,7 @@ export const {
   useHoldIssueHandlerTicketsMutation,
   useResumeIssueHandlerTicketsMutation,
   useCloseIssueHandlerTicketsMutation,
+  useUpdateTargetDateMutation,
   useCancelClosingIssueHandlerTicketsMutation,
   useTransferIssueHandlerTicketsMutation,
   useApproveTransferTicketMutation,

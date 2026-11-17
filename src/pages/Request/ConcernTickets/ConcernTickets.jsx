@@ -62,6 +62,7 @@ import { notificationApi, useGetNotificationQuery } from "../../../features/api_
 import { setSearchValue, setStatus, setPageNumber, setPageSize } from "../../../features/global/rootSlice";
 import { useCancelConcernMutation, useConfirmConcernMutation, useGetRequestorConcernsQuery } from "../../../features/api_request/concerns/concernApi";
 import { CardListSkeleton, NoRecordsFound, NoRecordsFoundTable, SomethingWentWrong, SomethingWentWrongTable, TableSkeleton } from "../../../components/TableState";
+import CustomerSatisfactionDialog from "./CustomerSatisfactionDialog";
 
 const ConcernTickets = () => {
   const status = useSelector((state) => state.root.status);
@@ -88,6 +89,7 @@ const ConcernTickets = () => {
   const { open: viewConcernOpen, onToggle: viewConcernOnToggle, onClose: viewConcernOnClose } = useDisclosure();
   const { open: viewHistoryOpen, onToggle: viewHistoryOnToggle, onClose: viewHistoryOnClose } = useDisclosure();
   const { open: returnOpen, onToggle: returnOnToggle, onClose: returnOnClose } = useDisclosure();
+  const { open: customerSatisfactionOpen, onToggle: customerSatisfactionOnToggle, onClose: customerSatisfactionOnClose } = useDisclosure();
 
   const { data: notificationBadge } = useGetNotificationQuery();
   const { data, isLoading, isFetching, isSuccess, isError, refetch } = useGetRequestorConcernsQuery({
@@ -134,6 +136,11 @@ const ConcernTickets = () => {
     setEditData(data);
   };
 
+  const onCustomerSatisfactionAction = (data) => {
+    customerSatisfactionOnToggle();
+    setEditData(data);
+  };
+
   const onConfirmAction = (data) => {
     const payload = {
       confirmTicketRequests: [
@@ -152,7 +159,7 @@ const ConcernTickets = () => {
       background: "#111927",
       confirmButtonColor: "#9e77ed",
       confirmButtonText: "Yes",
-      cancelButtonText: "No",
+      cancelButtonText: "Cancel",
       cancelButtonColor: "#1C2536",
       heightAuto: false,
       width: "30em",
@@ -162,7 +169,7 @@ const ConcernTickets = () => {
         title: "custom-title",
         htmlContainer: "custom-text",
         icon: "custom-icon",
-        confirmButton: "mui-loading-btn",
+        confirmButton: "custom-confirm-btn",
         cancelButton: "custom-cancel-btn",
       },
       preConfirm: async () => {
@@ -203,59 +210,6 @@ const ConcernTickets = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.close();
-      }
-    });
-  };
-
-  const onSelectedConfirmAction = () => {
-    const payload = {
-      confirmTicketRequests: selectedTickets.map((item) => ({
-        requestConcernId: item,
-      })),
-    };
-
-    Swal.fire({
-      title: "Confirmation",
-      text: "Confirm this ticket?",
-      icon: "info",
-      color: "white",
-      showCancelButton: true,
-      background: "#111927",
-      confirmButtonColor: "#9e77ed",
-      confirmButtonText: "Yes",
-      cancelButtonText: "No",
-      cancelButtonColor: "#1C2536",
-      heightAuto: false,
-      width: "30em",
-      customClass: {
-        container: "custom-container",
-        title: "custom-title",
-        htmlContainer: "custom-text",
-        icon: "custom-icon",
-        confirmButton: "custom-confirm-btn",
-        cancelButton: "custom-cancel-btn",
-      },
-    }).then((result) => {
-      if (result.isConfirmed) {
-        confirmConcern(payload)
-          .unwrap()
-          .then(() => {
-            toast.success("Success!", {
-              description: "Confirm ticket successfully!",
-              duration: 1500,
-            });
-
-            dispatch(notificationApi.util.resetApiState());
-            dispatch(notificationMessageApi.util.resetApiState());
-            setSelectedTickets([]);
-          })
-          .catch((err) => {
-            console.log("Error", err);
-            toast.error("Error!", {
-              description: err.data.error.message,
-              duration: 1500,
-            });
-          });
       }
     });
   };
@@ -329,18 +283,71 @@ const ConcernTickets = () => {
     setViewHistoryData(data);
   };
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      const allTicketIds = rows.map((item) => item.requestConcernId) || [];
-      setSelectedTickets(allTicketIds);
-    } else {
-      setSelectedTickets([]);
-    }
-  };
+  // const onSelectedConfirmAction = () => {
+  //   const payload = {
+  //     confirmTicketRequests: selectedTickets.map((item) => ({
+  //       requestConcernId: item,
+  //     })),
+  //   };
 
-  const handleSelectTicket = (item) => {
-    setSelectedTickets((prevSelected) => (prevSelected.includes(item) ? prevSelected.filter((id) => id !== item) : [...prevSelected, item]));
-  };
+  //   Swal.fire({
+  //     title: "Confirmation",
+  //     text: "Confirm this ticket?",
+  //     icon: "info",
+  //     color: "white",
+  //     showCancelButton: true,
+  //     background: "#111927",
+  //     confirmButtonColor: "#9e77ed",
+  //     confirmButtonText: "Yes",
+  //     cancelButtonText: "No",
+  //     cancelButtonColor: "#1C2536",
+  //     heightAuto: false,
+  //     width: "30em",
+  //     customClass: {
+  //       container: "custom-container",
+  //       title: "custom-title",
+  //       htmlContainer: "custom-text",
+  //       icon: "custom-icon",
+  //       confirmButton: "custom-confirm-btn",
+  //       cancelButton: "custom-cancel-btn",
+  //     },
+  //   }).then((result) => {
+  //     if (result.isConfirmed) {
+  //       confirmConcern(payload)
+  //         .unwrap()
+  //         .then(() => {
+  //           toast.success("Success!", {
+  //             description: "Confirm ticket successfully!",
+  //             duration: 1500,
+  //           });
+
+  //           dispatch(notificationApi.util.resetApiState());
+  //           dispatch(notificationMessageApi.util.resetApiState());
+  //           setSelectedTickets([]);
+  //         })
+  //         .catch((err) => {
+  //           console.log("Error", err);
+  //           toast.error("Error!", {
+  //             description: err.data.error.message,
+  //             duration: 1500,
+  //           });
+  //         });
+  //     }
+  //   });
+  // };
+
+  // const handleSelectAll = (event) => {
+  //   if (event.target.checked) {
+  //     const allTicketIds = rows.map((item) => item.requestConcernId) || [];
+  //     setSelectedTickets(allTicketIds);
+  //   } else {
+  //     setSelectedTickets([]);
+  //   }
+  // };
+
+  // const handleSelectTicket = (item) => {
+  //   setSelectedTickets((prevSelected) => (prevSelected.includes(item) ? prevSelected.filter((id) => id !== item) : [...prevSelected, item]));
+  // };
 
   useEffect(() => {
     if (status) {
@@ -362,7 +369,7 @@ const ConcernTickets = () => {
   }, [status]);
 
   const tableColumns = [
-    { type: "checkbox", hidden: status !== "For Confirmation" },
+    // { type: "checkbox", hidden: status !== "For Confirmation" },
     { type: "text", width: 80 }, // Ticket no.
     { type: "multiline" }, // Request details
     { type: "text" }, // Resolution
@@ -381,7 +388,7 @@ const ConcernTickets = () => {
         </LoadingButton>
       </Stack>
 
-      {selectedTickets.length > 0 && (
+      {/* {selectedTickets.length > 0 && (
         <Stack direction={isScreenSmall ? "column" : "row"} alignItems={isScreenSmall ? "left" : "center"} sx={sx.selectionBox}>
           <Stack direction="row" gap={0.5}>
             <LocalOffer />
@@ -395,7 +402,7 @@ const ConcernTickets = () => {
             Confirm
           </LoadingButton>
         </Stack>
-      )}
+      )} */}
 
       <Stack sx={global.content}>
         {/* MAIN */}
@@ -536,7 +543,7 @@ const ConcernTickets = () => {
           {isScreenSmall ? (
             // Card
             <>
-              {status === "For Confirmation" && (
+              {/* {status === "For Confirmation" && (
                 <Stack
                   direction="row"
                   sx={{
@@ -555,7 +562,7 @@ const ConcernTickets = () => {
                   />
                   <Typography>Select All</Typography>
                 </Stack>
-              )}
+              )} */}
 
               <Stack spacing={2} sx={{ padding: 2 }}>
                 {success &&
@@ -563,7 +570,7 @@ const ConcernTickets = () => {
                     <Card key={index} sx={sx.cards}>
                       <CardContent sx={sx.cardContent}>
                         <Stack spacing={1} direction="row" alignItems="center">
-                          {status === "For Confirmation" && (
+                          {/* {status === "For Confirmation" && (
                             <Stack>
                               <Checkbox
                                 checked={selectedTickets.includes(item.requestConcernId)}
@@ -573,7 +580,7 @@ const ConcernTickets = () => {
                                 }}
                               />
                             </Stack>
-                          )}
+                          )} */}
 
                           <Stack sx={{ width: "100%", gap: 1 }}>
                             {/* Ticket Number */}
@@ -744,7 +751,7 @@ const ConcernTickets = () => {
                 <Table size="small" stickyHeader sx={{ borderBottom: "none" }}>
                   <TableHead>
                     <TableRow>
-                      {status === "For Confirmation" && (
+                      {/* {status === "For Confirmation" && (
                         <TableCell
                           padding="checkbox"
                           sx={{
@@ -761,7 +768,7 @@ const ConcernTickets = () => {
                             }}
                           />
                         </TableCell>
-                      )}
+                      )} */}
                       <TableCell sx={sx.tableCellHeader}>TICKET NO.</TableCell>
                       <TableCell sx={sx.tableCellHeader}>REQUEST DETAILS</TableCell>
                       <TableCell sx={sx.tableCellHeader}>RESOLUTION</TableCell>
@@ -790,7 +797,7 @@ const ConcernTickets = () => {
                                 },
                               }}
                             >
-                              {status === "For Confirmation" && (
+                              {/* {status === "For Confirmation" && (
                                 <TableCell padding="checkbox" sx={sx.tableCellBody} align="center">
                                   <Checkbox
                                     checked={selectedTickets.includes(item.requestConcernId)}
@@ -800,7 +807,7 @@ const ConcernTickets = () => {
                                     }}
                                   />
                                 </TableCell>
-                              )}
+                              )} */}
 
                               <TableCell sx={sx.tableCellBody} onClick={() => onViewHistoryAction(item)}>
                                 {`${moment(item.created_At).format("YYYY")}-${item.ticketRequestConcerns?.[0]?.ticketConcernId}`}
@@ -894,7 +901,14 @@ const ConcernTickets = () => {
                               )}
 
                               <TableCell align="center">
-                                <ConcernActions data={item} onView={onViewConcernAction} onConfirm={onConfirmAction} onReturn={onReturnAction} onCancel={onCancelAction} />
+                                <ConcernActions
+                                  data={item}
+                                  onView={onViewConcernAction}
+                                  onConfirm={onConfirmAction}
+                                  onCustomerSatisfaction={onCustomerSatisfactionAction}
+                                  onReturn={onReturnAction}
+                                  onCancel={onCancelAction}
+                                />
                               </TableCell>
                             </TableRow>
                           </React.Fragment>
@@ -949,6 +963,7 @@ const ConcernTickets = () => {
           )}
           {viewHistoryOpen && <ConcernHistory data={viewHistoryData} status={status} open={viewHistoryOpen} onClose={viewHistoryOnClose} />}
           {returnOpen && <ConcernReturn data={returnData} open={returnOpen} onClose={returnOnClose} />}
+          {customerSatisfactionOpen && <CustomerSatisfactionDialog data={editData} open={customerSatisfactionOpen} onClose={customerSatisfactionOnClose} />}
         </Stack>
       </Stack>
     </Stack>

@@ -31,7 +31,6 @@ const schema = yup.object().shape({
   AddClosingAttachments: yup.array().nullable(),
   ChannelId: yup.object().required().label("Channel"),
   CategoryId: yup.array().required().label("Category"),
-  SubCategoryId: yup.array().required().label("Sub Category"),
   CategoryConcern: yup.object().required().label("Concern Category"),
   Technicians: yup.array().notRequired(),
   Notes: yup.string().notRequired(),
@@ -64,7 +63,6 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
   // useSignalRConnection();
 
   const [getCategory, { data: categoryData, isLoading: categoryIsLoading, isSuccess: categoryIsSuccess }] = useLazyGetCategoryQuery();
-  const [getSubCategory, { data: subCategoryData, isLoading: subCategoryIsLoading }] = useLazyGetSubCategoryArrayQuery();
   const [getConcernCategory, { data: concernCategoryData, isLoading: concernCategoryIsLoading, isSuccess: concernCategoryIsSuccess }] = useLazyGetCategoryConcernQuery();
   const [getTechnicians, { data: technicianData, isLoading: technicianIsLoading, isSuccess: technicianIsSuccess }] = useLazyGetTechniciansQuery();
   const [closeIssueHandlerTickets, { isLoading: closeIssueHandlerTicketsIsLoading, isFetching: closeIssueHandlerTicketsIsFetching }] = useCloseIssueHandlerTicketsMutation();
@@ -85,7 +83,6 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
 
       ChannelId: null,
       CategoryId: [],
-      SubCategoryId: [],
       CategoryConcern: null,
       Technicians: [],
 
@@ -116,18 +113,6 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
     if (category.length === 0) {
       payload.append(`ClosingTicketCategories[0].ticketAttachmentId`, "");
       payload.append(`ClosingTicketCategories[0].categoryId`, "");
-    }
-
-    const subCategory = formData.SubCategoryId;
-
-    for (let i = 0; i < subCategory.length; i++) {
-      payload.append(`ClosingSubTicketCategories[${i}].ticketSubCategoryId`, subCategory[i]?.ticketSubCategoryId || "");
-      payload.append(`ClosingSubTicketCategories[${i}].subCategoryId`, subCategory[i]?.subCategoryId);
-    }
-
-    if (subCategory.length === 0) {
-      payload.append(`ClosingSubTicketCategories[0].ticketSubCategoryId`, "");
-      payload.append(`ClosingSubTicketCategories[0].subCategoryId`, "");
     }
 
     const technicians = formData.Technicians;
@@ -267,19 +252,20 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
   };
 
   useEffect(() => {
-    if (!concernCategoryData) getConcernCategory({ Status: true });
+    if (!concernCategoryIsSuccess) getConcernCategory({ Status: true });
 
+    setValue("CategoryConcern", {
+      id: concernCategoryData?.value?.category?.[0]?.id,
+      categoryConcern: concernCategoryData?.value?.category?.[0]?.categoryConcern,
+    });
+  }, []);
+
+  useEffect(() => {
     if (data) {
       setValue("ticketConcernId", data?.ticketConcernId);
-
       setValue("ChannelId", {
         id: data?.channelId,
         channel_Name: data?.channel_Name,
-      });
-
-      setValue("CategoryConcern", {
-        id: concernCategoryData?.value?.category?.[0]?.id,
-        categoryConcern: concernCategoryData?.value?.category?.[0]?.categoryConcern,
       });
 
       const category = data?.getOpenTicketCategories?.map((item) => ({
@@ -287,39 +273,9 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
         id: item.categoryId,
         category_Description: item.category_Description,
       }));
-
-      // const subCategory = data?.getOpenTicketSubCategories.map((item) => ({
-      //   ticketSubCategoryId: item.ticketSubCategoryId,
-      //   subCategoryId: item.subCategoryId,
-      //   sub_Category_Description: item.subCategory_Description,
-      // }));
-
-      setValue("CategoryId", null);
-      // setValue("SubCategoryId", null);
-
-      const categoryIdParams = data?.getOpenTicketCategories?.map((item) => item?.categoryId);
-
       setValue("CategoryId", category);
-      // setValue("SubCategoryId", subCategory);
-      getSubCategory({
-        CategoryId: categoryIdParams,
-      });
     }
   }, [data]);
-
-  useEffect(() => {
-    const selectedCategories = watch("CategoryId");
-    const selectedSubCategories = watch("SubCategoryId");
-
-    if (selectedCategories.length > 0) {
-      const filteredSubCategories = selectedSubCategories.filter((subCategory) =>
-        selectedCategories.some((category) => subCategoryData?.value?.some((item) => item.subCategoryId === subCategory.subCategoryId && item.categoryId === category.id)),
-      );
-      setValue("SubCategoryId", filteredSubCategories);
-    } else {
-      setValue("SubCategoryId", []);
-    }
-  }, [subCategoryData]);
 
   const minDate = new moment().subtract(1, "days");
   const today = new moment();
@@ -442,90 +398,44 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
 
                 {/* Fields */}
                 <Stack sx={sx.fieldSection}>
-                  {/* Category and Sub-Category */}
-                  <Stack sx={sx.categoryBox}>
-                    {/* Category */}
-                    <Stack sx={sx.fieldTwoColsStack}>
-                      <Stack sx={sx.fieldTitleWithIconBox}>
-                        <Typography sx={sx.fieldText}>Category:</Typography>
-                        <FiberManualRecord sx={sx.requiredDot} />
-                      </Stack>
-
-                      <Controller
-                        control={control}
-                        name="CategoryId"
-                        render={({ field: { ref, value, onChange } }) => {
-                          return (
-                            <Autocomplete
-                              multiple
-                              ref={ref}
-                              size="small"
-                              value={value}
-                              options={categoryData?.value?.category.filter((item) => item.channelId === watch("ChannelId")?.id) || []}
-                              loading={categoryIsLoading}
-                              renderInput={(params) => <TextField {...params} placeholder="Category" sx={sx.autoComplete} />}
-                              onOpen={() => {
-                                if (!categoryIsSuccess)
-                                  getCategory({
-                                    Status: true,
-                                  });
-                              }}
-                              onChange={(_, value) => {
-                                onChange(value);
-
-                                const categoryIdParams = value?.map((category) => category?.id);
-                                if (watch("CategoryId").length === 0) {
-                                  setValue("SubCategoryId", []);
-                                }
-
-                                getSubCategory({
-                                  CategoryId: categoryIdParams,
-                                });
-                              }}
-                              getOptionLabel={(option) => option.category_Description || ""}
-                              isOptionEqualToValue={(option, value) => option.id === value.id}
-                              getOptionDisabled={(option) => watch("CategoryId").some((item) => item.id === option.id)}
-                              disableClearable
-                              componentsProps={sx.automCompleteProp}
-                            />
-                          );
-                        }}
-                      />
+                  {/* Category */}
+                  <Stack sx={sx.fieldOneColStack}>
+                    <Stack sx={sx.fieldTitleWithIconBox}>
+                      <Typography sx={sx.fieldText}>Category:</Typography>
+                      <FiberManualRecord sx={sx.requiredDot} />
                     </Stack>
 
-                    {/* Sub Category */}
-                    {/* <Stack sx={sx.fieldTwoColsStack}>
-                      <Stack sx={sx.fieldTitleWithIconBox}>
-                        <Typography sx={sx.fieldText}>Sub Category:</Typography>
-                        <FiberManualRecord sx={sx.requiredDot} />
-                      </Stack>
-                      <Controller
-                        control={control}
-                        name="SubCategoryId"
-                        render={({ field: { ref, value, onChange } }) => {
-                          return (
-                            <Autocomplete
-                              multiple
-                              ref={ref}
-                              size="small"
-                              value={value}
-                              options={subCategoryData?.value || []}
-                              loading={subCategoryIsLoading}
-                              renderInput={(params) => <TextField {...params} placeholder="Sub Category" sx={sx.autoComplete} />}
-                              onChange={(_, value) => {
-                                onChange(value);
-                              }}
-                              getOptionLabel={(option) => option?.sub_Category_Description || ""}
-                              isOptionEqualToValue={(option, value) => option?.subCategoryId === value?.subCategoryId}
-                              getOptionDisabled={(option) => watch("SubCategoryId").some((item) => item.subCategoryId === option.subCategoryId)}
-                              noOptionsText={"No sub category available"}
-                              disableClearable
-                              componentsProps={sx.automCompleteProp}
-                            />
-                          );
-                        }}
-                      />
-                    </Stack> */}
+                    <Controller
+                      control={control}
+                      name="CategoryId"
+                      render={({ field: { ref, value, onChange } }) => {
+                        return (
+                          <Autocomplete
+                            multiple
+                            ref={ref}
+                            size="small"
+                            value={value}
+                            options={categoryData?.value?.category.filter((item) => item.channelId === watch("ChannelId")?.id) || []}
+                            loading={categoryIsLoading}
+                            renderInput={(params) => <TextField {...params} placeholder="Category" sx={sx.autoComplete} />}
+                            onOpen={() => {
+                              if (!categoryIsSuccess)
+                                getCategory({
+                                  Status: true,
+                                });
+                            }}
+                            onChange={(_, value) => {
+                              onChange(value);
+                            }}
+                            getOptionLabel={(option) => option.category_Description || ""}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            getOptionDisabled={(option) => watch("CategoryId").some((item) => item.id === option.id)}
+                            disableClearable
+                            componentsProps={sx.automCompleteProp}
+                          />
+                        );
+                      }}
+                    />
                   </Stack>
 
                   {/* Concern Category */}
@@ -805,9 +715,7 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
             form="closeTicket"
             variant="contained"
             loading={closeIssueHandlerTicketsIsLoading || closeIssueHandlerTicketsIsFetching}
-            disabled={
-              !watch("resolution") || watch("CategoryId").length === 0 || watch("SubCategoryId").length === 0 || !watch("CategoryConcern") || (watch("ClosingDate") && !watch("BackdateRemarks"))
-            }
+            disabled={!watch("resolution") || watch("CategoryId").length === 0 || !watch("CategoryConcern") || (watch("ClosingDate") && !watch("BackdateRemarks"))}
           >
             Close Ticket
           </LoadingButton>

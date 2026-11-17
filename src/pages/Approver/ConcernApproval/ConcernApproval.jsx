@@ -16,17 +16,16 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-
-import { useState } from "react";
-import { global } from "../../../styles/global";
-import { approverStyles as sx } from "../styles/approverStyles";
+import { CalendarMonthOutlined, Check, FlashOn, LocalOffer, SwapVertOutlined } from "@mui/icons-material";
 
 import moment from "moment";
 import useDisclosure from "../../../hooks/useDisclosure";
 
+import { useState } from "react";
 import { theme } from "../../../theme/theme";
+import { global } from "../../../styles/global";
+import { approverStyles as sx } from "../styles/approverStyles";
 import { useGetReceiverConcernsQuery } from "../../../features/api_request/concerns_receiver/concernReceiverApi";
-import { CalendarMonthOutlined, Check, FlashOn, LocalOffer, SwapVertOutlined } from "@mui/icons-material";
 import { CardListSkeleton, NoRecordsFound, NoRecordsFoundTable, SomethingWentWrong, SomethingWentWrongTable, TableSkeleton } from "../../../components/TableState";
 
 import ConcernDetails from "./ConcernDetails";
@@ -100,11 +99,11 @@ const ConcernApproval = ({ search, categoryId }) => {
   const tableColumns = [{ type: "text", width: 80 }, { type: "multiline" }, { type: "multiline" }, { type: "text" }, { type: "chip" }, { type: "chip" }, { type: "text" }];
 
   return (
-    <Stack sx={{ width: "100%", mt: 1 }}>
+    <Stack sx={sx.mainContainer}>
       {/* Selection */}
       {selectedIds.length > 0 && (
-        <Stack direction={isScreenSmall ? "column" : "row"} alignItems={isScreenSmall ? "left" : "center"} sx={sx.selectionBox}>
-          <Stack direction="row" gap={0.5}>
+        <Stack sx={sx.selectionBox}>
+          <Stack sx={sx.selectionLeftContent}>
             <LocalOffer />
             <Typography>
               {selectedIds.length} {""}
@@ -113,7 +112,7 @@ const ConcernApproval = ({ search, categoryId }) => {
           </Stack>
 
           <Button variant="contained" color="success" onClick={openApproveDialog} startIcon={<Check />}>
-            Take Ticket
+            Approve
           </Button>
         </Stack>
       )}
@@ -129,9 +128,8 @@ const ConcernApproval = ({ search, categoryId }) => {
                     <Card
                       key={index}
                       sx={{
+                        ...sx.card,
                         backgroundColor: isSelected ? "#1E2034" : theme.palette.bgForm.black3,
-                        borderRadius: "15px",
-                        borderColor: "#2D3748",
                       }}
                     >
                       <CardContent sx={sx.cardContent}>
