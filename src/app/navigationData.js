@@ -73,6 +73,11 @@ export const sidebarNavigationData = [
         name: "Approver",
         path: "/masterlist/approver-setup",
       },
+      {
+        id: 8,
+        name: "Approver",
+        path: "/masterlist/systems",
+      },
       // {
       //   id: 9,
       //   name: "PMS Type",

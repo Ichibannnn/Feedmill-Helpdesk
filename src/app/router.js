@@ -16,10 +16,6 @@ import SubCategory from "../pages/Masterlist/Sub-Category/SubCategory";
 import CategoryConcern from "../pages/Masterlist/ConcernCategory/CategoryConcern";
 import OneCharging from "../pages/Masterlist/OneCharging/OneCharging";
 import NewApprover from "../pages/ChannelSetup/ApproverSetup/NewApprover";
-import PmsType from "../pages/Masterlist/PmsType/PmsType";
-import Sites from "../pages/Masterlist/Sites/Sites";
-import Buildings from "../pages/Masterlist/Buildings/Buildings";
-import StoreList from "../pages/Masterlist/Stores/StoreList";
 
 import RequestsPage from "../pages/Request/RequestsPage";
 import ConcernTickets from "../pages/Request/ConcernTickets/ConcernTickets";
@@ -47,6 +43,7 @@ import Pms from "../pages/PMS/Pms";
 import ChecklistManagementPage from "../pages/ChecklistManagement/ChecklistManagementPage";
 import UserType from "../pages/Masterlist/UserTypes/UserType";
 import ConcernApproval from "../pages/Approver/ConcernApproval/ConcernApproval";
+import Systems from "../pages/Masterlist/Systems/Systems";
 
 export const router = createBrowserRouter([
   {
@@ -131,6 +128,10 @@ export const router = createBrowserRouter([
           {
             path: "/masterlist/approver-setup",
             element: <NewApprover />,
+          },
+          {
+            path: "/masterlist/systems",
+            element: <Systems />,
           },
           // {
           //   path: "/masterlist/pms-type",

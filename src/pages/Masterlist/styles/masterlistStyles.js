@@ -241,7 +241,6 @@ export const masterlistStyles = {
   },
 
   // User Account Cards
-  
 
   // Shared feedback (loading / empty / error) block
   feedbackContainer: {
@@ -315,5 +314,34 @@ export const masterlistStyles = {
     fontWeight: 500,
     fontSize: "13px",
     color: theme.palette.text.main,
+  },
+
+  titleAccentTableText: {
+    fontSize: "12px",
+    fontWeight: 600,
+    fontWeight: 600,
+    color: "#22B4BF",
+  },
+
+  descAccentTableText: {
+    fontSize: "12px",
+    fontWeight: 600,
+    fontWeight: 600,
+  },
+
+  cancelButton: {
+    backgroundColor: "#1C2536",
+    "&:hover": { backgroundColor: "#2f3c55" },
+  },
+  textFieldInputProps: {
+    style: {
+      fontSize: "13px",
+    },
+  },
+
+  textFieldLabelProps: {
+    style: {
+      fontSize: "13px",
+    },
   },
 };

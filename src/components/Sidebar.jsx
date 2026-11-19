@@ -73,6 +73,7 @@ const MOBILE_MENU_ITEMS = [
       },
       { id: 7, name: "Receiver Setup", path: "/masterlist/receiver-setup", icon: "ContactsOutlined" },
       { id: 8, name: "Approver Setup", path: "/masterlist/approver-setup", icon: "GroupsOutlined" },
+      { id: 9, name: "Systems", path: "/masterlist/systems", icon: "DisplaySettingsOutlined" },
     ],
   },
   {
@@ -459,6 +460,12 @@ const SidebarList = ({ collapsed, onExpand, onNavigate }) => {
           name: "Approver Setup",
           path: "/masterlist/approver-setup",
           icon: "GroupsOutlined",
+        },
+        {
+          id: 9,
+          name: "Systems",
+          path: "/masterlist/systems",
+          icon: "DisplaySettingsOutlined",
         },
       ],
     },

@@ -16,6 +16,7 @@ import {
   ContactsOutlined,
   CreditScoreOutlined,
   DiscountOutlined,
+  DisplaySettingsOutlined,
   DynamicFeedOutlined,
   EqualizerOutlined,
   FactCheckOutlined,
@@ -67,6 +68,7 @@ export const getSubMenuIcon = (iconName) => {
     BackupTableOutlined: <BackupTableOutlined fontSize="small" />,
     StoreMallDirectoryOutlined: <StoreMallDirectoryOutlined fontSize="small" />,
     ApartmentOutlined: <ApartmentOutlined fontSize="small" />,
+    DisplaySettingsOutlined: <DisplaySettingsOutlined fontSize="small" />,
     // Requestor / Receiver
     DiscountOutlined: <DiscountOutlined fontSize="small" />,
     // Ticketing
