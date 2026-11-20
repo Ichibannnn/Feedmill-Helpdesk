@@ -140,7 +140,7 @@ const ConcernApproval = ({ search, categoryId }) => {
                               checked={isSelected(item)}
                               onChange={() => handleSelectTicket(item)}
                               inputProps={{
-                                "aria-label": `select ticket ${item?.ticketRequestConcerns[0]?.ticketConcernId}`,
+                                "aria-label": `select ticket ${item?.ticketRequestConcerns[0]?.ticketNumberId}`,
                               }}
                             />
                           </Stack>
@@ -165,7 +165,7 @@ const ConcernApproval = ({ search, categoryId }) => {
                             {/* Ticket Number */}
                             <Stack sx={sx.cardDetailBox}>
                               <Typography sx={sx.cardTitle}>TICKET NUMBER:</Typography>
-                              <Typography sx={sx.cardDescription}>{`${moment(item.created_At).format("YYYY")}-${item.ticketRequestConcerns[0]?.ticketConcernId}`}</Typography>
+                              <Typography sx={sx.cardDescription}>{item?.ticketRequestConcerns?.[0]?.ticketNumberId}</Typography>
                             </Stack>
 
                             {/* Concern */}
@@ -268,11 +268,11 @@ const ConcernApproval = ({ search, categoryId }) => {
                                 checked={isSelected(item)}
                                 onChange={() => handleSelectTicket(item)}
                                 inputProps={{
-                                  "aria-label": `select ticket ${item?.ticketRequestConcerns[0]?.ticketConcernId}`,
+                                  "aria-label": `select ticket ${item?.ticketRequestConcerns[0]?.ticketNumberId}`,
                                 }}
                               />
                               {item.severity === "Urgent" && <FlashOn color="warning" />}
-                              <Typography sx={sx.checkboxText}>{`${moment(item.created_At).format("YYYY")}-${item.ticketRequestConcerns[0]?.ticketConcernId}`}</Typography>
+                              <Typography sx={sx.checkboxText}>{item?.ticketRequestConcerns?.[0]?.ticketNumberId}</Typography>
                             </Stack>
                           </TableCell>
 

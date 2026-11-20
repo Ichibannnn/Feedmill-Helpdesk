@@ -919,7 +919,7 @@ const ConcernViewDialog = ({ editData, open, onClose, refetch }) => {
               {/* Header */}
               <Stack mb={1}>
                 <Typography sx={sx.titleText}>{!editData ? "New Request" : "View Request"}</Typography>
-                <Typography sx={sx.captionText}>{`Ticket Number: ${moment(editData?.created_At).format("YYYY")}-${editData?.ticketRequestConcerns?.[0]?.ticketConcernId}`}</Typography>
+                <Typography sx={sx.captionText}>{`Ticket Number: ${editData?.ticketRequestConcerns?.[0]?.ticketNumberId}`}</Typography>
               </Stack>
 
               {/* Fields */}

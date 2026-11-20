@@ -591,7 +591,7 @@ const ConcernTickets = () => {
                               <Box sx={global.cardSpacer} />
 
                               <Box sx={global.cardDescDetailBox}>
-                                <Typography sx={global.cardDescription}>{`${moment(item.created_At).format("YYYY")}-${item.ticketRequestConcerns?.[0]?.ticketConcernId}`}</Typography>
+                                <Typography sx={global.cardDescription}>{item.ticketRequestConcerns?.[0]?.ticketNumberId}</Typography>
                               </Box>
                             </Stack>
 
@@ -810,7 +810,7 @@ const ConcernTickets = () => {
                               )} */}
 
                               <TableCell sx={sx.tableCellBody} onClick={() => onViewHistoryAction(item)}>
-                                {`${moment(item.created_At).format("YYYY")}-${item.ticketRequestConcerns?.[0]?.ticketConcernId}`}
+                                {item.ticketRequestConcerns?.[0]?.ticketNumberId}
                               </TableCell>
 
                               <TableCell sx={sx.customTableCellBody} onClick={() => onViewHistoryAction(item)}>

@@ -122,23 +122,48 @@ const ApproveConcernDialog = ({ open, onClose, selectedIds, setSelectedIds }) =>
         <Stack sx={{ width: "100%", p: 1 }}>
           <form onSubmit={handleSubmit(onSubmitAction)}>
             <DialogContent>
-              {/* Concern Type */}
-              <Stack sx={sx.fieldOneColStack}>
-                <Stack sx={sx.fieldTitleWithIconBox}>
-                  <Typography sx={sx.fieldText}>Concern Type</Typography>
-                  <FiberManualRecord sx={sx.requiredDot} />
+              <Stack gap={1.5}>
+                {/* Concern Type */}
+                <Stack sx={sx.fieldOneColStack}>
+                  <Stack sx={sx.fieldTitleWithIconBox}>
+                    <Typography sx={sx.fieldText}>Concern Type</Typography>
+                    <FiberManualRecord sx={sx.requiredDot} />
+                  </Stack>
+
+                  <Controller
+                    name="concernType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select {...field} size="small" displayEmpty inputProps={{ "aria-label": "Without label" }}>
+                        <MenuItem value="Internal">Internal</MenuItem>
+                        <MenuItem value="External">External</MenuItem>
+                      </Select>
+                    )}
+                  />
                 </Stack>
 
-                <Controller
-                  name="concernType"
-                  control={control}
-                  render={({ field }) => (
-                    <Select {...field} size="small" displayEmpty inputProps={{ "aria-label": "Without label" }}>
-                      <MenuItem value="Internal">Internal</MenuItem>
-                      <MenuItem value="External">External</MenuItem>
-                    </Select>
-                  )}
-                />
+                {watch("concernType") === "External" && (
+                  <Stack>
+                    {/* Helpdesk  */}
+                    <Stack sx={sx.fieldOneColStack}>
+                      <Stack sx={sx.fieldTitleWithIconBox}>
+                        <Typography sx={sx.fieldText}>Helpdesk Name</Typography>
+                        <FiberManualRecord sx={sx.requiredDot} />
+                      </Stack>
+
+                      <Controller
+                        name="concernType"
+                        control={control}
+                        render={({ field }) => (
+                          <Select {...field} size="small" displayEmpty inputProps={{ "aria-label": "Without label" }}>
+                            <MenuItem value="Internal">Internal</MenuItem>
+                            <MenuItem value="External">External</MenuItem>
+                          </Select>
+                        )}
+                      />
+                    </Stack>
+                  </Stack>
+                )}
               </Stack>
             </DialogContent>
 

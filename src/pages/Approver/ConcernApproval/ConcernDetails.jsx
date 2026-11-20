@@ -175,7 +175,7 @@ const ConcernDetails = ({ data, setData, open, onClose }) => {
               <Avatar sx={sx.avatarIcon}>{trimLetters(data?.fullName)}</Avatar>
 
               <Box>
-                <Typography sx={sx.formHeader}>{`Ticket Number ${moment(data?.created_At).format("YYYY")}-${data?.ticketRequestConcerns[0]?.ticketConcernId}`}</Typography>
+                <Typography sx={sx.formHeader}>{`Ticket Number ${data?.ticketRequestConcerns?.[0]?.ticketNumberId}`}</Typography>
                 <Typography sx={sx.subHeader}>{`New request from ${data?.fullName}`}</Typography>
               </Box>
             </Stack>
