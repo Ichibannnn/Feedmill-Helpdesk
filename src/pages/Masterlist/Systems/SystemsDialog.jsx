@@ -1,4 +1,4 @@
-import { Autocomplete, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, InputAdornment, MenuItem, Select, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, Chip, Dialog, DialogActions, DialogContent, Divider, IconButton, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import { useEffect } from "react";
 import { CloseRounded, LinkRounded, Save, SupportAgentRounded } from "@mui/icons-material";
 
@@ -8,10 +8,10 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 import { LoadingButton } from "@mui/lab";
 
-import { useAddEditPmsTypeMutation } from "../../../features/api masterlist/pms-type/pmsTypeApi";
-import { masterlistStyles as sx } from "../styles/masterlistStyles";
 import { useLazyGetActiveSitesQuery } from "../../../features/api masterlist/sites/sitesApi";
 import { C, METHOD_COLORS, fieldSx, formStyles as ui, methodChipSx } from "./styles/formStyles";
+
+import { useAddEditSystemsMutation } from "../../../features/api masterlist/systems/systemsApi";
 
 // Adjust the methods to match your actual API
 const URL_FIELDS = [
@@ -28,26 +28,19 @@ const MethodChip = ({ method }) => {
   return <Chip label={method} size="small" sx={methodChipSx(color)} />;
 };
 
-const required = (label) => yup.string().trim().required(`${label} is required.`);
 const schema = yup.object().shape({
   id: yup.string().nullable(),
-  helpdeskName: yup.string().required().label("Helpdesk name is required."),
-  ...Object.fromEntries(URL_FIELDS.map(({ name, label }) => [name, required(label)])),
+  helpdeskName: yup.string().required().label("Helpdesk name"),
+  createUrl: yup.string().required().label("Direct to Helpdesk URL"),
+  updateOpenStatusUrl: yup.string().required().label("Update open status URL"),
+  updateClosingStatusUrl: yup.string().required().label("Update closing status URL"),
+  cancelTicketUrl: yup.string().required().label("Cancel URL"),
+  getChannelUrl: yup.string().required().label("Channel URL"),
 });
 
-const defaultValues = {
-  id: null,
-  helpdeskName: "",
-  ...Object.fromEntries(URL_FIELDS.map(({ name }) => [name, ""])),
-};
-
-const PmsTypeDialog = ({ data, open, onClose }) => {
-  const [addEditPmsType, { isLoading }] = useAddEditPmsTypeMutation();
-
-  const [getSite, { data: siteData, isLoading: siteIsLoading, isSuccess: siteIsSuccess }] = useLazyGetActiveSitesQuery();
-
+const SystemDialog = ({ data, open, onClose }) => {
+  const [addEditSystem, { isLoading }] = useAddEditSystemsMutation();
   const isEditMode = Boolean(data?.id);
-  const lookupDropdownOptions = ["Stores", "Employees", "Farms", "Departments", "Buildings"];
 
   const {
     handleSubmit,
@@ -60,44 +53,56 @@ const PmsTypeDialog = ({ data, open, onClose }) => {
   } = useForm({
     resolver: yupResolver(schema),
     mode: "onTouched",
-    defaultValues,
+    defaultValues: {
+      id: null,
+      helpdeskName: "",
+      createUrl: "",
+      updateOpenStatusUrl: "",
+      updateClosingStatusUrl: "",
+      cancelTicketUrl: "",
+      getChannelUrl: "",
+    },
   });
 
   useEffect(() => {
     if (data) {
-      reset({
-        id: data.id ?? null,
-        helpdeskName: data.helpdeskName ?? data.name ?? "",
-        ...Object.fromEntries(URL_FIELDS.map(({ name }) => [name, data[name] ?? ""])),
-      });
+      setValue("id", data?.id);
+      setValue("helpdeskName", data?.helpdeskName);
+      setValue("createUrl", data?.createUrl);
+      setValue("updateOpenStatusUrl", data?.updateOpenStatusUrl);
+      setValue("updateClosingStatusUrl", data?.updateClosingStatusUrl);
+      setValue("cancelTicketUrl", data?.cancelTicketUrl);
+      setValue("getChannelUrl", data?.getChannelUrl);
     }
-  }, [data, reset]);
+  }, [data]);
 
   const onCloseAction = () => {
     reset();
     onClose();
   };
 
-  console.log("Data: ", data);
-
   const onSubmitAction = async (formData) => {
     const entry = isEditMode
       ? {
           id: data.id,
-          name: formData.name,
-          siteId: formData.site.id,
-          totalAnnualPMS: Number(formData.noOfPmsEvalutions),
-          lookup: formData.lookup,
+          helpdeskName: formData.helpdeskName,
+          createUrl: formData.createUrl,
+          updateOpenStatusUrl: formData.updateOpenStatusUrl,
+          updateClosingStatusUrl: formData.updateClosingStatusUrl,
+          cancelTicketUrl: formData.cancelTicketUrl,
+          getChannelUrl: formData.getChannelUrl,
         }
       : {
-          name: formData.name,
-          siteId: formData.site.id,
-          totalAnnualPMS: Number(formData.noOfPmsEvalutions),
-          lookup: formData.lookup,
+          helpdeskName: formData.helpdeskName,
+          createUrl: formData.createUrl,
+          updateOpenStatusUrl: formData.updateOpenStatusUrl,
+          updateClosingStatusUrl: formData.updateClosingStatusUrl,
+          cancelTicketUrl: formData.cancelTicketUrl,
+          getChannelUrl: formData.getChannelUrl,
         };
 
     try {
-      await addEditPmsType(entry).unwrap();
+      await addEditSystem(entry).unwrap();
       toast.success("Success!", {
         description: isEditMode ? "System updated successfully!" : "System added successfully!",
         duration: 1500,
@@ -141,7 +146,7 @@ const PmsTypeDialog = ({ data, open, onClose }) => {
                     inputRef={ref}
                     size="small"
                     value={value}
-                    placeholder="e.g. Acme Support Desk"
+                    placeholder="Enter Helpdesk name"
                     onChange={onChange}
                     onBlur={onBlur}
                     error={Boolean(errors.helpdeskName)}
@@ -214,4 +219,4 @@ const PmsTypeDialog = ({ data, open, onClose }) => {
   );
 };
 
-export default PmsTypeDialog;
+export default SystemDialog;

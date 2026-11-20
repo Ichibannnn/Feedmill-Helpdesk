@@ -28,8 +28,8 @@ const EndpointRow = ({ method, label, url, title }) => {
 
   return (
     // <Tooltip title={label} placement="top-start" arrow>
-    <Box>
-      <Typography sx={{ fontFamily: "monospace", fontWeight: 600, fontSize: 13, wordBreak: "break-all", color: theme.palette.text.secondary }}>{title}</Typography>
+    <Stack gap={1}>
+      <Typography sx={{ fontWeight: 600, fontSize: "12.5px", wordBreak: "break-all", color: "#e8edf7" }}>{title}</Typography>
       <Box
         sx={{
           display: "flex",
@@ -57,9 +57,9 @@ const EndpointRow = ({ method, label, url, title }) => {
         >
           {method}
         </Box>
-        <Typography sx={{ fontFamily: "monospace", fontWeight: 600, fontSize: 13, wordBreak: "break-all" }}>{url}</Typography>
+        <Typography sx={{ fontFamily: 'ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace', fontWeight: 600, fontSize: 13, wordBreak: "break-all" }}>{url}</Typography>
       </Box>
-    </Box>
+    </Stack>
     // </Tooltip>
   );
 };
@@ -72,8 +72,6 @@ const SystemsUrl = ({ urls }) => {
     onClose();
   };
 
-  console.log("URL: ", urls);
-
   return (
     <div>
       <IconButton ref={ref} onClick={onToggle}>
@@ -84,7 +82,19 @@ const SystemsUrl = ({ urls }) => {
         </Tooltip>
       </IconButton>
 
-      <Dialog fullWidth maxWidth="sm" open={open}>
+      <Dialog
+        fullWidth
+        maxWidth="sm"
+        open={open}
+        PaperProps={{
+          position: "relative",
+          overflow: "hidden",
+          bgcolor: "#111a2a",
+          border: `1px solid #111a2a`,
+          borderRadius: "14px",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.55)",
+        }}
+      >
         <DialogTitle
           sx={{
             display: "flex",
@@ -101,8 +111,8 @@ const SystemsUrl = ({ urls }) => {
         </DialogTitle>
 
         <DialogContent>
-          <Stack sx={{ padding: "5px", gap: 1.5 }}>
-            <Stack gap={1}>
+          <Stack sx={{ padding: "10px" }}>
+            <Stack gap={2}>
               {ENDPOINTS.filter(({ field }) => urls?.[field]).map(({ field, ...endpoint }) => (
                 <EndpointRow key={field} url={urls[field]} {...endpoint} />
               ))}

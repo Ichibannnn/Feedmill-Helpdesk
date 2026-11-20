@@ -35,10 +35,11 @@ import useDisclosure from "../../../hooks/useDisclosure";
 import noRecordsFound from "../../../assets/svg/noRecordsFound.svg";
 import somethingWentWrong from "../../../assets/svg/SomethingWentWrong.svg";
 
+import SystemsUrl from "./SystemsUrl";
 import SystemsDialog from "./SystemsDialog";
 import SystemsActions from "./SystemsActions";
+
 import { useArchiveSystemsMutation, useGetSystemsQuery } from "../../../features/api masterlist/systems/systemsApi";
-import SystemsUrl from "./SystemsUrl";
 
 const STATUS_TABS = [
   { value: "", label: "ALL" },
@@ -158,7 +159,7 @@ const Systems = () => {
             <TableHead sx={sx.tableHead}>
               <TableRow>
                 {TABLE_COLUMNS.map((column) => (
-                  <TableCell key={column} sx={sx.headCell} align={column === "HELPDESK NAME" || column === "URL" ? "left" : "center"}>
+                  <TableCell key={column} sx={sx.headCell} align={column === "HELPDESK NAME" ? "left" : "center"}>
                     {column}
                   </TableCell>
                 ))}
@@ -173,7 +174,7 @@ const Systems = () => {
                       {index + 1}
                     </TableCell>
                     <TableCell sx={sx.bodyCell}>{item.helpdeskName || "--"}</TableCell>
-                    <TableCell sx={sx.bodyCell}>
+                    <TableCell sx={sx.bodyCell} align="center">
                       <SystemsUrl urls={item} />
                     </TableCell>
                     <TableCell sx={sx.bodyCell} align="center">
