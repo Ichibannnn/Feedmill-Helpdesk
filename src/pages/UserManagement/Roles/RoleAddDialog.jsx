@@ -18,11 +18,10 @@ const schema = yup.object().shape({
   permissions: yup.array().required(),
 });
 
-const parentCheckbox = ["Overview", "User Management", "Masterlist", "Requestor", "Receiver", "Approver", "Ticketing", "Reports"];
+const parentCheckbox = ["Overview", "User Management", "Masterlist", "Requestor", "Approver", "Ticketing", "Reports"];
 const userManagementCheckbox = ["User Account", "User Role"];
 const masterlistCheckbox = ["One Charging", "Service Provider", "Channel Setup", "Category", "Concern Category", "Approver Setup", "Systems"];
 const requestCheckbox = ["Requestor Concerns"];
-const receiverCheckbox = ["Receiver Concerns"];
 const approverCheckbox = ["Approval", "View Tickets"];
 const ticketingCheckbox = ["Tickets"];
 
@@ -184,12 +183,6 @@ const RoleAddDialog = ({ data, open, onClose }) => {
       setValue(
         "permissions",
         watch("permissions").filter((item) => !requestCheckbox.includes(item)),
-      );
-    }
-    if (!e.target.checked && e.target.value === "Receiver") {
-      setValue(
-        "permissions",
-        watch("permissions").filter((item) => !receiverCheckbox.includes(item)),
       );
     }
     if (!e.target.checked && e.target.value === "Approver") {
@@ -476,65 +469,6 @@ const RoleAddDialog = ({ data, open, onClose }) => {
                   </FormControl>
                 )}
 
-                {/* Receiver */}
-                {watch("permissions")?.includes("Receiver") && (
-                  <FormControl
-                    component="fieldset"
-                    variant="standard"
-                    sx={{
-                      border: "1px solid #2D3748",
-                      borderRadius: "10px",
-                      padding: 2,
-                    }}
-                  >
-                    <FormLabel
-                      component="legend"
-                      sx={{
-                        padding: "0 20px",
-                      }}
-                    >
-                      Receiver
-                    </FormLabel>
-
-                    <FormGroup>
-                      <Stack direction="row" flexWrap="wrap">
-                        {receiverCheckbox.map((item, index) => (
-                          <Controller
-                            key={index}
-                            control={control}
-                            name="permissions"
-                            render={({ field: { ref, value, onChange } }) => {
-                              return (
-                                <FormControlLabel
-                                  sx={{
-                                    flex: 1,
-                                    flexBasis: "40%",
-                                  }}
-                                  control={
-                                    <Checkbox
-                                      ref={ref}
-                                      value={item}
-                                      checked={value?.includes(item)}
-                                      onChange={(e) => {
-                                        if (e.target.checked) {
-                                          onChange([...value, e.target.value]);
-                                        } else {
-                                          onChange([...value.filter((item) => item !== e.target.value)]);
-                                        }
-                                      }}
-                                    />
-                                  }
-                                  label={item}
-                                />
-                              );
-                            }}
-                          />
-                        ))}
-                      </Stack>
-                    </FormGroup>
-                  </FormControl>
-                )}
-
                 {/* Approver */}
                 {watch("permissions")?.includes("Approver") && (
                   <FormControl
@@ -676,7 +610,6 @@ const RoleAddDialog = ({ data, open, onClose }) => {
                 (watch("permissions").includes("User Management") ? !watch("permissions").some((item) => userManagementCheckbox.includes(item)) : false) ||
                 (watch("permissions").includes("Masterlist") ? !watch("permissions").some((item) => masterlistCheckbox.includes(item)) : false) ||
                 (watch("permissions").includes("Requestor") ? !watch("permissions").some((item) => requestCheckbox.includes(item)) : false) ||
-                (watch("permissions").includes("Receiver") ? !watch("permissions").some((item) => receiverCheckbox.includes(item)) : false) ||
                 (watch("permissions").includes("Approver") ? !watch("permissions").some((item) => approverCheckbox.includes(item)) : false) ||
                 (watch("permissions").includes("Ticketing") ? !watch("permissions").some((item) => ticketingCheckbox.includes(item)) : false)
               }

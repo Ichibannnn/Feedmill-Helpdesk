@@ -15,15 +15,19 @@ import Swal from "sweetalert2";
 import { useDispatch } from "react-redux";
 import { notificationApi } from "../../../features/api_notification/notificationApi";
 import { notificationMessageApi } from "../../../features/api_notification_message/notificationMessageApi";
+import { useLazyGetActiveSystemsQuery } from "../../../features/api masterlist/systems/systemsApi";
+import { useEffect } from "react";
 
 const schema = yup.object().shape({
   concernType: yup.string().oneOf(["Internal", "External"], "Invalid Concern Type").required("Concern Type is required"),
+  helpdeskName: yup.object().nullable(),
 });
 
 const ApproveConcernDialog = ({ open, onClose, selectedIds, setSelectedIds }) => {
+  const dispatch = useDispatch();
   const [approveConcern, { isLoading: isApproveConcernLoading }] = useTakeCherryPickTicketMutation();
 
-  const dispatch = useDispatch();
+  const [getSystems, { data: systemData, isLoading: systemIsLoading, isSuccess: systemIsSuccess }] = useLazyGetActiveSystemsQuery();
 
   const {
     control,
@@ -37,6 +41,7 @@ const ApproveConcernDialog = ({ open, onClose, selectedIds, setSelectedIds }) =>
     mode: "onChange",
     defaultValues: {
       concernType: "Internal",
+      helpdeskName: null,
     },
   });
 
@@ -46,6 +51,8 @@ const ApproveConcernDialog = ({ open, onClose, selectedIds, setSelectedIds }) =>
   };
 
   const onSubmitAction = (formData) => {
+    console.log("FormData: ", formData);
+
     const payload = {
       ticketConcernIdCherryLists: selectedIds?.map((item) => item),
       concernType: formData.concernType,
@@ -98,6 +105,12 @@ const ApproveConcernDialog = ({ open, onClose, selectedIds, setSelectedIds }) =>
       }
     });
   };
+
+  useEffect(() => {
+    if (watch("concernType") === "Internal") {
+      setValue("helpdeskName", null);
+    }
+  }, [watch("concernType") === "Internal", setValue]);
 
   return (
     <>
@@ -152,14 +165,30 @@ const ApproveConcernDialog = ({ open, onClose, selectedIds, setSelectedIds }) =>
                       </Stack>
 
                       <Controller
-                        name="concernType"
                         control={control}
-                        render={({ field }) => (
-                          <Select {...field} size="small" displayEmpty inputProps={{ "aria-label": "Without label" }}>
-                            <MenuItem value="Internal">Internal</MenuItem>
-                            <MenuItem value="External">External</MenuItem>
-                          </Select>
-                        )}
+                        name="helpdeskName"
+                        render={({ field: { ref, value, onChange } }) => {
+                          return (
+                            <Autocomplete
+                              ref={ref}
+                              size="small"
+                              value={value}
+                              options={systemData?.value?.helpdesk || []}
+                              loading={systemIsLoading}
+                              renderInput={(params) => <TextField {...params} placeholder="Select helpdesk name" />}
+                              onOpen={() => {
+                                if (!systemIsSuccess) getSystems();
+                              }}
+                              onChange={(_, value) => {
+                                onChange(value);
+                              }}
+                              getOptionLabel={(option) => option.helpdeskName || ""}
+                              isOptionEqualToValue={(option, value) => option.id === value.id}
+                              fullWidth
+                              disableClearable
+                            />
+                          );
+                        }}
                       />
                     </Stack>
                   </Stack>
@@ -171,7 +200,7 @@ const ApproveConcernDialog = ({ open, onClose, selectedIds, setSelectedIds }) =>
               <LoadingButton variant="contained" size="small" loading={isApproveConcernLoading} onClick={onCloseAction} sx={sx.cancelButton}>
                 Cancel
               </LoadingButton>
-              <LoadingButton size="small" type="submit" variant="contained" loading={isApproveConcernLoading}>
+              <LoadingButton size="small" type="submit" variant="contained" loading={isApproveConcernLoading} disabled={watch("concernType") === "External" && !watch("helpdeskName")}>
                 Approve
               </LoadingButton>
             </DialogActions>

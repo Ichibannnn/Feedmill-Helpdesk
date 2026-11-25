@@ -13,6 +13,15 @@ export const systemsApi = api.enhanceEndpoints({ addTagTypes: tags }).injectEndp
       providesTags: tags,
     }),
 
+    getActiveSystems: builder.query({
+      query: (params) => ({
+        url: "ExternalHelpdesk?Status=true",
+        method: "GET",
+        params: params,
+      }),
+      providesTags: tags,
+    }),
+
     addEditSystems: builder.mutation({
       query: (body) => ({
         url: "ExternalHelpdesk",
@@ -32,4 +41,4 @@ export const systemsApi = api.enhanceEndpoints({ addTagTypes: tags }).injectEndp
   }),
 });
 
-export const { useGetSystemsQuery, useAddEditSystemsMutation, useArchiveSystemsMutation } = systemsApi;
+export const { useGetSystemsQuery, useLazyGetActiveSystemsQuery, useAddEditSystemsMutation, useArchiveSystemsMutation } = systemsApi;

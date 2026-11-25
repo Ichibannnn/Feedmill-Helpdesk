@@ -241,17 +241,7 @@ const Approval = () => {
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           {tabNavigation === "1" ? (
             <>
-              <ConcernApproval
-                search={search}
-                categoryId={watch("CategoryId")?.id}
-                // data={targetApprovalData}
-                // isLoading={targetApprovalIsLoading}
-                // isFetching={targetApprovalIsFetching}
-                // isSuccess={targetApprovalIsSuccess}
-                // isError={targetApprovalIsError}
-                // setPageNumber={setPageNumber}
-                // setPageSize={setPageSize}
-              />
+              <ConcernApproval search={search} categoryId={watch("CategoryId")?.id} />
             </>
           ) : (
             <>

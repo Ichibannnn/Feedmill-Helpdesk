@@ -114,9 +114,7 @@ const IssueHandlerConcernsActions = ({
   };
 
   const onCopyOpenTicket = async (data) => {
-    const message = `Fresh Morning, ${data?.requestor_Name}, ${data?.department_Name}. Your request has been successfully received under Service Ticket #${moment(data?.created_At).format(
-      "YYYY",
-    )}-${data?.ticketConcernId}. Will review your concern, and you will be updated once action has been taken. Thank you!`;
+    const message = `Fresh Morning, ${data?.requestor_Name}, ${data?.department_Name}. Your request has been successfully received under Service Ticket #${data?.ticketNumber}. Will review your concern, and you will be updated once action has been taken. Thank you!`;
 
     try {
       await navigator?.clipboard?.writeText(message);

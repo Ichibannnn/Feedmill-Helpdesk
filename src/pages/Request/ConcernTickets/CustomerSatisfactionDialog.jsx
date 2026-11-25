@@ -102,13 +102,6 @@ const CustomerSatisfactionDialog = ({ data, open, onClose }) => {
   };
 
   const onConfirmHandler = () => {
-    // Values are strings, e.g. { q1: "91-95%", ..., remarks: "..." }
-    // onConfirm?.({ ...answers, remarks: remarks.trim() });
-    // resetForm();
-
-    // console.log("Answers: ", answers);
-    // console.log("Remarks: ", remarks);
-
     const payload = {
       concernType: data?.concernType,
       question1: answers?.q1,
@@ -122,8 +115,6 @@ const CustomerSatisfactionDialog = ({ data, open, onClose }) => {
         },
       ],
     };
-
-    console.log("Payload: ", payload);
 
     Swal.fire({
       title: "Confirmation",
@@ -225,7 +216,7 @@ const CustomerSatisfactionDialog = ({ data, open, onClose }) => {
             <Typography variant="h6" sx={sx.headerTitle}>
               Ticket{" "}
               <Box component="span" sx={sx.ticketNumber}>
-                #{moment(data?.created_At).format("YYYY")}-{data?.ticketRequestConcerns?.[0]?.ticketConcernId}
+                #{data?.ticketRequestConcerns?.[0]?.ticketNumberId}
               </Box>
             </Typography>
           </Box>

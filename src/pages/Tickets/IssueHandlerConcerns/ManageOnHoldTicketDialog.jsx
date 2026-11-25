@@ -222,7 +222,7 @@ const ManageOnHoldTicketDialog = ({ data, open, onClose, refetch }) => {
   const onSubmitAction = (formData) => {
     Swal.fire({
       title: "Confirmation",
-      text: `Update on-hold changes to ticket ${moment(data?.created_At).format("YYYY")}-${data?.ticketConcernId}?`,
+      text: `Update on-hold changes to ticket ${data?.ticketNumber}?`,
       icon: "info",
       color: "white",
       showCancelButton: true,
@@ -309,43 +309,6 @@ const ManageOnHoldTicketDialog = ({ data, open, onClose, refetch }) => {
       } finally {
         setIsSaving(false);
       }
-
-      // Old payload
-      // holdIssueHandlerTickets(payload)
-      //   .unwrap()
-      //   .then(async () => {
-      //     // Ticket saved successfully -> now delete the attachments the user removed
-      //     if (idsToDelete.length > 0) {
-      //       const results = await Promise.allSettled(idsToDelete.map((id) => deleteRequestorAttachment({ ticketAttachmentId: id }).unwrap()));
-
-      //       const failedCount = results.filter((r) => r.status === "rejected").length;
-      //       if (failedCount > 0) {
-      //         toast.error("Error!", {
-      //           description: `${failedCount} attachment(s) could not be deleted.`,
-      //           duration: 2500,
-      //         });
-      //       }
-
-      //       refetch();
-      //     }
-
-      //     toast.success("Success!", {
-      //       description: "On-Hold updated successfully!",
-      //       duration: 1500,
-      //     });
-
-      //     setAttachments([]);
-      //     setDeletedAttachmentIds([]);
-      //     reset();
-      //     onClose();
-      //   })
-      //   .catch((err) => {
-      //     console.log("Error", err);
-      //     toast.error("Error!", {
-      //       description: err.data.error.message,
-      //       duration: 1500,
-      //     });
-      //   });
     });
   };
 
@@ -394,37 +357,6 @@ const ManageOnHoldTicketDialog = ({ data, open, onClose, refetch }) => {
       "OnHoldAttachments",
       watch("OnHoldAttachments").filter((file) => file.name !== fileNameToDelete.name),
     );
-
-    // try {
-    //   if (fileNameToDelete.ticketAttachmentId) {
-    //     const deletePayload = {
-    //       ticketAttachmentId: fileNameToDelete.ticketAttachmentId,
-    //     };
-    //     await deleteRequestorAttachment(deletePayload)
-    //       .unwrap()
-    //       .then(() => {
-    //         toast.success("Success!", {
-    //           description: "File deleted successfully.",
-    //           duration: 1500,
-    //         });
-    //         refetch();
-    //       })
-    //       .catch((err) => {
-    //         console.log("error: ", err);
-    //         toast.error("Error!", {
-    //           description: err.data.error.message,
-    //           duration: 1500,
-    //         });
-    //       });
-    //   }
-
-    //   setAttachments((prevFiles) => prevFiles.filter((fileName) => fileName !== fileNameToDelete));
-
-    //   setValue(
-    //     "OnHoldAttachments",
-    //     watch("OnHoldAttachments").filter((file) => file.name !== fileNameToDelete.name),
-    //   );
-    // } catch (error) {}
   };
 
   const handleDragOver = (event) => {
@@ -674,7 +606,7 @@ const ManageOnHoldTicketDialog = ({ data, open, onClose, refetch }) => {
                 <Stack>
                   <Typography sx={sx.titleText}>Manage Hold Ticket</Typography>
                   <Stack sx={sx.manageTicketBox}>
-                    <Typography sx={sx.captionText}>{` Ticket # ${moment(data?.created_At).format("YYYY")}-${data?.ticketConcernId}`}</Typography>
+                    <Typography sx={sx.captionText}>{` Ticket #${data?.ticketNumber}`}</Typography>
 
                     {data?.getForClosingTickets?.[0]?.isApprove === true && <Typography sx={sx.approvedText}>(Approved)</Typography>}
                   </Stack>

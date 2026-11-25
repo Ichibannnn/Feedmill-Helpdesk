@@ -144,7 +144,7 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
 
     const result = await sweetAlertDialog({
       title: "Confirmation",
-      text: `Requesting to close this ticket number ${moment(data?.created_At).format("YYYY")}-${data?.ticketConcernId}?`,
+      text: `Requesting to close this ticket number ${data?.ticketNumber}?`,
       icon: "info",
       confirmButtonText: "Yes",
     });
@@ -357,7 +357,7 @@ const IssueHandlerClosingDialog = ({ data, open, onClose, viewOnClose }) => {
                 {/* Ticket Number */}
                 <Stack>
                   <Typography sx={sx.titleText}>Close Ticket</Typography>
-                  <Typography sx={sx.captionText}>{` Ticket # ${moment(data?.created_At).format("YYYY")}-${data?.ticketConcernId}`}</Typography>
+                  <Typography sx={sx.captionText}>{` Ticket #${data?.ticketNumber}`}</Typography>
                 </Stack>
 
                 {/* Ticket Detail Section */}

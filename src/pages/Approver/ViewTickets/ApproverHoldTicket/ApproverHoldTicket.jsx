@@ -16,20 +16,16 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { useState } from "react";
-import { AccessTimeOutlined, CalendarMonthOutlined } from "@mui/icons-material";
+import { theme } from "../../../../theme/theme";
+import { CalendarMonthOutlined } from "@mui/icons-material";
 
 import moment from "moment";
-import { theme } from "../../../../theme/theme";
-import useDisclosure from "../../../../hooks/useDisclosure";
-
-import useSignalRConnection from "../../../../hooks/useSignalRConnection";
+// import useSignalRConnection from "../../../../hooks/useSignalRConnection";
 
 import noRecordsFound from "../../../../assets/svg/noRecordsFound.svg";
 import somethingWentWrong from "../../../../assets/svg/SomethingWentWrong.svg";
 
 const ApproverHoldTicket = ({ data, isLoading, isFetching, isSuccess, isError, setPageNumber, setPageSize }) => {
-  const { open, onToggle, onClose } = useDisclosure();
   const isScreenSmall = useMediaQuery(theme.breakpoints.down("md"));
   // useSignalRConnection();
 
@@ -81,9 +77,7 @@ const ApproverHoldTicket = ({ data, isLoading, isFetching, isSuccess, isError, s
 
                           <Stack direction="row" gap={0.5} alignItems="center">
                             <Typography sx={{ fontWeight: 700, fontSize: "0.775rem", lineHeight: 1.57, color: "#D65DB1" }}>TICKET NUMBER:</Typography>
-                            <Typography sx={{ fontWeight: 400, fontSize: "0.775rem", lineHeight: 1.57, color: theme.palette.text.main }}>
-                              {`${moment(item.requestedAt).format("YYYY")}-${item.ticketConcernId}`}
-                            </Typography>
+                            <Typography sx={{ fontWeight: 400, fontSize: "0.775rem", lineHeight: 1.57, color: theme.palette.text.main }}>{item.ticketNumber}</Typography>
                           </Stack>
 
                           <Stack direction="row" gap={0.5} alignItems="center">
@@ -104,18 +98,6 @@ const ApproverHoldTicket = ({ data, isLoading, isFetching, isSuccess, isError, s
                             {item.getOnHoldApproverCategories?.length > 0 ? (
                               <Typography sx={{ fontWeight: 400, fontSize: "0.775rem", lineHeight: 1.57, color: theme.palette.text.main }}>
                                 {item.getOnHoldApproverCategories?.map((item) => item.category_Description).join(", ")}
-                              </Typography>
-                            ) : (
-                              <Typography sx={{ fontWeight: 400, fontSize: "0.775rem", lineHeight: 1.57, color: theme.palette.text.main }}> -- </Typography>
-                            )}
-                          </Stack>
-
-                          <Stack direction="row" gap={0.5} alignItems="center">
-                            <Typography sx={{ fontWeight: 700, fontSize: "0.775rem", lineHeight: 1.57, color: "#D65DB1" }}>SUB CATEGORY:</Typography>
-
-                            {item.getOnHoldApproverSubCategories?.length > 0 ? (
-                              <Typography sx={{ fontWeight: 400, fontSize: "0.775rem", lineHeight: 1.57, color: theme.palette.text.main }}>
-                                {item.getOnHoldApproverSubCategories?.map((item) => item.subCategory_Description).join(", ")}
                               </Typography>
                             ) : (
                               <Typography sx={{ fontWeight: 400, fontSize: "0.775rem", lineHeight: 1.57, color: theme.palette.text.main }}> -- </Typography>
@@ -333,7 +315,7 @@ const ApproverHoldTicket = ({ data, isLoading, isFetching, isSuccess, isError, s
                           fontWeight: 500,
                         }}
                       >
-                        {`${moment(item.requestedAt).format("YYYY")}-${item.ticketConcernId}`}
+                        {item?.ticketNumber}
                       </TableCell>
 
                       <TableCell>
@@ -389,33 +371,13 @@ const ApproverHoldTicket = ({ data, isLoading, isFetching, isSuccess, isError, s
                       <TableCell
                         sx={{
                           color: "#EDF2F7",
-                          fontSize: "12px",
-                          fontWeight: 500,
                         }}
                       >
-                        <Stack gap={0.5}>
-                          <Stack>
-                            <Typography sx={{ fontSize: "12px", fontWeight: 600, fontWeight: 600, color: "#22B4BF" }}>Category:</Typography>
-                            {item.getOnHoldApproverCategories?.length > 0 ? (
-                              <Typography sx={{ fontSize: "12px", fontWeight: 500 }}>
-                                {item.getOnHoldApproverCategories?.map((item) => item.category_Description).join(", ")}
-                              </Typography>
-                            ) : (
-                              <Typography sx={{ fontSize: "12px", fontWeight: 500 }}>--</Typography>
-                            )}
-                          </Stack>
-
-                          <Stack>
-                            <Typography sx={{ fontSize: "12px", fontWeight: 600, fontWeight: 600, color: "#22B4BF" }}>Sub Category:</Typography>
-                            {item.getOnHoldApproverSubCategories?.length > 0 ? (
-                              <Typography sx={{ fontSize: "12px", fontWeight: 500 }}>
-                                {item.getOnHoldApproverSubCategories?.map((item) => item.subCategory_Description).join(", ")}
-                              </Typography>
-                            ) : (
-                              <Typography sx={{ fontSize: "12px", fontWeight: 500 }}>--</Typography>
-                            )}
-                          </Stack>
-                        </Stack>
+                        {item.getOnHoldApproverCategories?.length > 0 ? (
+                          <Typography sx={{ fontSize: "12px", fontWeight: 500 }}>{item.getOnHoldApproverCategories?.map((item) => item.category_Description).join(", ")}</Typography>
+                        ) : (
+                          <Typography sx={{ fontSize: "12px", fontWeight: 500 }}>--</Typography>
+                        )}
                       </TableCell>
 
                       <Tooltip title={item?.reason} placement="bottom-start">

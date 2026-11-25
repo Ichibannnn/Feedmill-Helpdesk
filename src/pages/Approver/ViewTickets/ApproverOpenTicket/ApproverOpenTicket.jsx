@@ -84,9 +84,7 @@ const ApproverOpenTicket = ({ data, isLoading, isFetching, isSuccess, isError, s
 
                           <Stack direction="row" gap={0.5} alignItems="center">
                             <Typography sx={{ fontWeight: 700, fontSize: "0.775rem", lineHeight: 1.57, color: "#D65DB1" }}>TICKET NUMBER:</Typography>
-                            <Typography sx={{ fontWeight: 400, fontSize: "0.775rem", lineHeight: 1.57, color: theme.palette.text.main }}>{`${moment(item.created_At).format(
-                              "YYYY",
-                            )}-${item.ticketConcernId}`}</Typography>
+                            <Typography sx={{ fontWeight: 400, fontSize: "0.775rem", lineHeight: 1.57, color: theme.palette.text.main }}>{item.ticketNumber}</Typography>
                           </Stack>
 
                           <Stack direction="row" gap={0.5} alignItems="center">
@@ -352,7 +350,7 @@ const ApproverOpenTicket = ({ data, isLoading, isFetching, isSuccess, isError, s
                           align="center"
                           onClick={() => onViewAction(item)}
                         >
-                          {`${moment(item.created_At).format("YYYY")}-${item.ticketConcernId}`}
+                          {item?.ticketNumber}
                         </TableCell>
 
                         <TableCell onClick={() => onViewAction(item)}>
@@ -435,18 +433,24 @@ const ApproverOpenTicket = ({ data, isLoading, isFetching, isSuccess, isError, s
                           }}
                           onClick={() => onViewAction(item)}
                         >
-                          <Chip
-                            variant="filled"
-                            size="30px"
-                            icon={<CalendarMonthOutlined fontSize="small" color="primary" />}
-                            sx={{
-                              fontSize: "12px",
-                              backgroundColor: "#1D1F3B",
-                              color: theme.palette.primary.main,
-                              fontWeight: 800,
-                            }}
-                            label={moment(item.target_Date).format("LL")}
-                          />
+                          {item.target_Date ? (
+                            <>
+                              <Chip
+                                variant="filled"
+                                size="small"
+                                icon={<CalendarMonthOutlined fontSize="small" color="primary" />}
+                                sx={{
+                                  fontSize: "12px",
+                                  backgroundColor: "#1D1F3B",
+                                  color: theme.palette.primary.main,
+                                  fontWeight: 800,
+                                }}
+                                label={moment(item.target_Date).format("LL")}
+                              />
+                            </>
+                          ) : (
+                            "--"
+                          )}
                         </TableCell>
 
                         <TableCell

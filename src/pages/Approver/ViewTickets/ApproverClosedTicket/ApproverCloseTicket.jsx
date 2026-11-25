@@ -17,24 +17,17 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { useState } from "react";
-import { AccessTimeOutlined, CalendarMonthOutlined, SwapVertOutlined } from "@mui/icons-material";
+import { CalendarMonthOutlined, SwapVertOutlined } from "@mui/icons-material";
 
 import moment from "moment";
 import { theme } from "../../../../theme/theme";
-import useDisclosure from "../../../../hooks/useDisclosure";
-
-import useSignalRConnection from "../../../../hooks/useSignalRConnection";
+// import useSignalRConnection from "../../../../hooks/useSignalRConnection";
 
 import noRecordsFound from "../../../../assets/svg/noRecordsFound.svg";
 import somethingWentWrong from "../../../../assets/svg/SomethingWentWrong.svg";
 
 const ApproverCloseTicket = ({ data, isLoading, isFetching, isSuccess, isError, setPageNumber, setPageSize, ascendingDate, setAscendingDate, refetch }) => {
-  const [viewDelayedTicketData, setViewDelayedTIcketData] = useState(null);
-
-  const { open, onToggle, onClose } = useDisclosure();
   const isScreenSmall = useMediaQuery(theme.breakpoints.down("md"));
-  // useSignalRConnection();
 
   const onPageNumberChange = (_, page) => {
     setPageNumber(page + 1);
@@ -43,11 +36,6 @@ const ApproverCloseTicket = ({ data, isLoading, isFetching, isSuccess, isError, 
   const onPageSizeChange = (e) => {
     setPageSize(e.target.value);
     setPageNumber(1);
-  };
-
-  const onViewAction = (data) => {
-    onToggle();
-    setViewDelayedTIcketData(data);
   };
 
   return (
@@ -80,7 +68,7 @@ const ApproverCloseTicket = ({ data, isLoading, isFetching, isSuccess, isError, 
                           padding: 2,
                         }}
                       >
-                        <Stack spacing={1} onClick={() => onViewAction(item)}>
+                        <Stack spacing={1}>
                           <Stack mb={2}>
                             <Typography sx={{ fontWeight: 500, fontSize: "17px", color: theme.palette.primary.main }}>{item.fullname}</Typography>
                             <Typography sx={{ fontWeight: 500, fontSize: "14px", color: "#EDF2F7" }}>{item.department_Name}</Typography>
@@ -89,9 +77,7 @@ const ApproverCloseTicket = ({ data, isLoading, isFetching, isSuccess, isError, 
 
                           <Stack direction="row" gap={0.5} alignItems="center">
                             <Typography sx={{ fontWeight: 700, fontSize: "0.775rem", lineHeight: 1.57, color: "#D65DB1" }}>TICKET NUMBER:</Typography>
-                            <Typography sx={{ fontWeight: 400, fontSize: "0.775rem", lineHeight: 1.57, color: theme.palette.text.main }}>{`${moment(item?.created_At).format(
-                              "YYYY"
-                            )}-${item.ticketConcernId}`}</Typography>
+                            <Typography sx={{ fontWeight: 400, fontSize: "0.775rem", lineHeight: 1.57, color: theme.palette.text.main }}>{item.ticketNumber}</Typography>
                           </Stack>
 
                           <Stack direction="row" gap={0.5} alignItems="center">
@@ -292,12 +278,11 @@ const ApproverCloseTicket = ({ data, isLoading, isFetching, isSuccess, isError, 
                             fontWeight: 500,
                           }}
                           align="center"
-                          onClick={() => onViewAction(item)}
                         >
-                          {`${moment(item?.created_At).format("YYYY")}-${item.ticketConcernId}`}
+                          {item.ticketNumber}
                         </TableCell>
 
-                        <TableCell onClick={() => onViewAction(item)}>
+                        <TableCell>
                           <Typography
                             sx={{
                               color: "#EDF2F7",
@@ -336,7 +321,6 @@ const ApproverCloseTicket = ({ data, isLoading, isFetching, isSuccess, isError, 
                               fontWeight: 500,
                               maxWidth: "300px",
                             }}
-                            onClick={() => onViewAction(item)}
                           >
                             {item.concern_Details?.split("\r\n").map((line, index) => (
                               <span key={index}>
@@ -353,7 +337,6 @@ const ApproverCloseTicket = ({ data, isLoading, isFetching, isSuccess, isError, 
                             fontSize: "12px",
                             fontWeight: 500,
                           }}
-                          onClick={() => onViewAction(item)}
                         >
                           <Chip
                             variant="filled"
@@ -375,7 +358,6 @@ const ApproverCloseTicket = ({ data, isLoading, isFetching, isSuccess, isError, 
                             fontSize: "12px",
                             fontWeight: 500,
                           }}
-                          onClick={() => onViewAction(item)}
                         >
                           <Chip
                             variant="filled"
@@ -398,7 +380,6 @@ const ApproverCloseTicket = ({ data, isLoading, isFetching, isSuccess, isError, 
                             fontWeight: 500,
                           }}
                           align="center"
-                          onClick={() => onViewAction(item)}
                         >
                           {item.delay_Days}
                         </TableCell>

@@ -371,7 +371,7 @@ const IssueHandlerConcerns = () => {
 
     Swal.fire({
       title: "Confirmation",
-      text: `Requesting to resume this ticket number ${moment(data?.created_At).format("YYYY")}-${data?.ticketConcernId}?`,
+      text: `Requesting to resume this ticket number ${data?.ticketNumber}?`,
       icon: "info",
       color: "white",
       showCancelButton: true,
@@ -888,7 +888,7 @@ const IssueHandlerConcerns = () => {
                             <Box sx={global.cardSpacer} />
 
                             <Box sx={global.cardDescDetailBox}>
-                              <Typography sx={global.cardDescription}>{`${moment(item.created_At).format("YYYY")}-${item.ticketConcernId}`}</Typography>
+                              <Typography sx={global.cardDescription}>{item?.ticketNumber}</Typography>
                             </Box>
                           </Stack>
 
@@ -1210,9 +1210,6 @@ const IssueHandlerConcerns = () => {
                           size="small"
                           onClick={() => {
                             dispatch(setAscending(!ascending));
-
-                            // if
-                            // setAscendingDate(!ascendingDate);
                           }}
                         >
                           {ascending ? <ArrowUpwardRounded sx={sx.sortIcon} /> : <ArrowDownwardRounded sx={sx.sortIcon} />}
@@ -1307,7 +1304,7 @@ const IssueHandlerConcerns = () => {
                             )} */}
 
                             <TableCell sx={sx.tableCellBody} onClick={() => onViewAction(item)}>
-                              {`${moment(item.created_At).format("YYYY")}-${item.ticketConcernId}`}
+                              {item?.ticketNumber}
                             </TableCell>
 
                             <TableCell onClick={() => onViewAction(item)}>
